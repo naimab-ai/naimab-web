@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Naimab — AI Burnout Prevention &amp; Energy Management</title>
+<meta name="description" content="Naimab is an AI mentor that helps you maintain balance and detects signs of burnout in advance. Daily micro-checkups, risk forecasting, and a personal recovery plan."/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link crossorigin="" href="https://framerusercontent.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="icon" type="image/png" href="icon.png"/>
+<link rel="apple-touch-icon" href="icon.png"/>
+<link rel="stylesheet" href="styles.css"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "bg-main": "#fcf6ef",
+        "bg-alt": "#f6f0e9",
+        "card": "#efe7dd",
+        "dark": "#2b180a",
+        "dark-hover": "#3e2407",
+        "muted": "#94877c",
+        "accent": "#dab697",
+        "accent-light": "#e8d3c0",
+      },
+      fontFamily: {
+        "body": ["Geist", "Geist Placeholder", "sans-serif"],
+        "heading": ["Halant", "Halant Placeholder", "sans-serif"],
+      },
+    },
+  },
+}
+</script>
+</head>
+
+<body class="bg-bg-main text-dark font-body overflow-x-hidden" style="--selection-background-color:#e8d3c0;--selection-color:#2b180a;">
+
+<!-- ── Grain texture ── -->
+<div class="grain-overlay" aria-hidden="true"></div>
+
+<div class="relative z-10 flex flex-col min-h-screen">
+
+<!-- ════════════════ NAVIGATION ════════════════ -->
+<header class="site-nav" id="main-header">
+  <div class="site-nav-inner">
+    <div class="site-nav-spacer hidden md:block" aria-hidden="true"></div>
+
+    <a href="#" class="site-nav-brand" aria-label="Naimab">
+      <span class="site-wordmark">Naimab</span>
+    </a>
+
+    <div class="site-nav-actions">
+      <a class="nav-pill nav-pill-secondary hidden md:inline-flex" href="#how-it-works">
+        <span class="nav-pill-label nav-pill-label-ghost">Learn More</span>
+        <span class="nav-pill-label nav-pill-label-main">How it Works</span>
+      </a>
+      <button class="waitlist-btn nav-pill nav-pill-primary hidden md:inline-flex" type="button">
+        <span class="nav-pill-label nav-pill-label-ghost">Free Access</span>
+        <span class="nav-pill-label nav-pill-label-main">Get Free Access</span>
+      </button>
+      <button class="site-nav-burger md:hidden flex flex-col gap-1.5" id="burger-btn" aria-label="Open menu">
+        <span class="w-6 h-0.5 bg-dark/70 rounded transition-all duration-300" id="burger-1"></span>
+        <span class="w-6 h-0.5 bg-dark/70 rounded transition-all duration-300" id="burger-2"></span>
+        <span class="w-4 h-0.5 bg-dark/70 rounded transition-all duration-300 ml-auto" id="burger-3"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Mobile menu ── -->
+<div class="fixed inset-0 z-[60] pointer-events-none" id="mobile-overlay">
+  <div class="absolute inset-0 bg-dark/40 opacity-0 transition-opacity duration-300 pointer-events-none" id="mobile-backdrop"></div>
+  <nav class="mobile-menu absolute right-0 top-0 h-full w-[280px] bg-bg-main shadow-2xl pointer-events-auto flex flex-col pt-24 px-8 gap-6" id="mobile-menu">
+    <a class="text-lg font-semibold text-dark/70 hover:text-dark transition-colors" href="#how-it-works" onclick="closeMobileMenu()">How it works</a>
+    <a class="text-lg font-semibold text-dark/70 hover:text-dark transition-colors" href="#why" onclick="closeMobileMenu()">Why Naimab</a>
+    <a class="text-lg font-semibold text-dark/70 hover:text-dark transition-colors" href="#faq" onclick="closeMobileMenu()">FAQ</a>
+    <hr class="border-dark/8 my-2"/>
+    <button class="waitlist-btn nav-pill nav-pill-primary w-full" type="button">
+      <span class="nav-pill-label nav-pill-label-ghost">Get Free Access</span>
+      <span class="nav-pill-label nav-pill-label-main">Get Free Access</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ════════════════ MAIN ════════════════ -->
+<main class="flex-grow">
+
+  <!-- ──── HERO ──── -->
+  <section class="bg-bg-alt pt-[118px] lg:pt-[152px] pb-14 lg:pb-16 px-6 lg:px-16">
+    <div class="max-w-[1120px] mx-auto flex flex-col items-center gap-8 lg:gap-10">
+
+      <!-- Heading -->
+      <h1 class="hero-stagger hero-blur-in hero-title" data-reveal-preset="spring-up" data-reveal-distance="170" data-reveal-letters="true" style="animation-delay: 0.2s;">Predict burnout.<br><span class="gradient-text">Protect your energy.</span></h1>
+
+      <!-- Subtext -->
+      <p class="hero-stagger hero-blur-in text-xl text-muted text-center max-w-[560px] leading-relaxed" data-reveal-preset="spring-up" data-reveal-distance="170" style="animation-delay: 0.35s;">
+        An AI system that analyzes behavioral and work patterns, predicts burnout risk, and provides personalized recommendations to prevent it.
+      </p>
+
+      <!-- Buttons -->
+      <div class="hero-actions flex flex-col sm:flex-row gap-4">
+        <button class="waitlist-btn nav-pill nav-pill-primary text-base px-10 py-4" data-reveal-preset="blur-left" data-reveal-distance="50" type="button">
+          <span class="nav-pill-label nav-pill-label-ghost">Get Early Access</span>
+          <span class="nav-pill-label nav-pill-label-main">Get Early Access</span>
+        </button>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="hero-stagger hero-image-in w-[min(1280px,calc(100vw-3rem))] lg:w-[min(1280px,calc(100vw-8rem))] max-w-none" data-reveal-preset="hero-rise" data-reveal-distance="560" style="animation-delay: 0.3s;">
+        <div class="dashboard-wrap">
+          <img alt="Naimab dashboard showing burnout trends, AI insights, and risk meter" class="w-full h-auto block" src="dashboard.png"/>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ──── MARQUEE BELT ──── -->
+  <div class="marquee-belt" role="marquee" aria-label="Key burnout facts">
+    <div class="marquee-track">
+      <div class="marquee-item">77% of workers report burnout symptoms<span class="marquee-sep"></span></div>
+      <div class="marquee-item">$125B+ lost annually to workplace burnout<span class="marquee-sep"></span></div>
+      <div class="marquee-item">Average recovery takes 3–6 months<span class="marquee-sep"></span></div>
+      <div class="marquee-item">Your body warns you 2–4 weeks early. Are you listening?<span class="marquee-sep"></span></div>
+      <div class="marquee-item">2 minutes a day — that's all it takes<span class="marquee-sep"></span></div>
+      <div class="marquee-item">Burnout is predictable — and preventable<span class="marquee-sep"></span></div>
+      <div class="marquee-item">77% of workers report burnout symptoms<span class="marquee-sep"></span></div>
+      <div class="marquee-item">$125B+ lost annually to workplace burnout<span class="marquee-sep"></span></div>
+      <div class="marquee-item">Average recovery takes 3–6 months<span class="marquee-sep"></span></div>
+      <div class="marquee-item">Your body warns you 2–4 weeks early. Are you listening?<span class="marquee-sep"></span></div>
+      <div class="marquee-item">2 minutes a day — that's all it takes<span class="marquee-sep"></span></div>
+      <div class="marquee-item">Burnout is predictable — and preventable<span class="marquee-sep"></span></div>
+    </div>
+  </div>
+
+  <!-- ──── HOW IT WORKS ──── -->
+  <section class="py-14 lg:py-16 px-6 lg:px-16" id="how-it-works">
+    <div class="max-w-[1120px] mx-auto flex flex-col gap-10 lg:gap-12">
+
+      <!-- Section header -->
+      <div class="flex flex-col gap-4 max-w-[620px]" data-animate data-reveal-preset="soft-up">
+        <span class="section-label w-fit">How it works</span>
+        <h2 class="section-heading text-4xl md:text-[50px]">How the AI works for you</h2>
+        <p class="text-muted text-lg leading-relaxed">A 2-minute daily check-in. An AI with memory that remembers what you've told it and learns you over time. A plan built just for you.</p>
+        <div class="mt-2" data-reveal-preset="blur-left" data-reveal-distance="50">
+          <button class="waitlist-btn nav-pill nav-pill-primary" type="button">
+            <span class="nav-pill-label nav-pill-label-ghost">Get Free Access</span>
+            <span class="nav-pill-label nav-pill-label-main">Get Free Access</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center" data-animate data-reveal-preset="soft-up" data-reveal-stagger="120">
+        <div class="flex flex-col gap-3" data-reveal-preset="soft-up">
+          <span class="step-number">01</span>
+          <h3 class="step-title">AI learns you</h3>
+          <p class="step-desc">It analyzes your schedule and daily patterns to create a model of you that gets smarter over time.</p>
+        </div>
+        <div class="mockup-screen max-w-[460px] mx-auto lg:mx-0" data-reveal-preset="spring-up" data-reveal-distance="120">
+          <div class="memory-graph-wrap">
+            <canvas id="memory-graph-canvas"></canvas>
+            <div class="memory-graph-status" id="memory-graph-status"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center" data-animate data-reveal-stagger="120">
+        <div class="flex flex-col gap-3 lg:order-2" data-reveal-preset="blur-right" data-reveal-distance="70">
+          <span class="step-number">02</span>
+          <h3 class="step-title">AI Forms First Hypotheses</h3>
+          <p class="step-desc">Once it has learned enough, the AI begins forming its first hypotheses about your state, patterns, and changing needs.</p>
+        </div>
+        <div class="mockup-screen max-w-[460px] mx-auto lg:mx-0 lg:order-1" data-reveal-preset="blur-left" data-reveal-distance="70">
+          <div class="hyp-wrap" id="hyp-wrap">
+            <!-- Status -->
+            <div class="hyp-status" id="hyp-status-bar">
+              <span class="hyp-dot"></span>
+              <span id="hyp-status-text">Scanning check-ins…</span>
+            </div>
+            <!-- Signal cards -->
+            <div class="hyp-signals">
+              <div class="hyp-signal" id="hyp-sig-0">
+                <div class="hyp-signal-label">Stress</div>
+                <div class="hyp-signal-value"><span class="hyp-arrow-up">&uarr;</span> 9/10</div>
+              </div>
+              <div class="hyp-signal" id="hyp-sig-1">
+                <div class="hyp-signal-label">Sleep</div>
+                <div class="hyp-signal-value"><span class="hyp-arrow-down">&darr;</span> 3/10</div>
+              </div>
+              <div class="hyp-signal" id="hyp-sig-2">
+                <div class="hyp-signal-label">Meetings</div>
+                <div class="hyp-signal-value"><span class="hyp-arrow-up">&uarr;</span> +40%</div>
+              </div>
+            </div>
+            <!-- Divider -->
+            <div class="hyp-divider" id="hyp-divider">
+              <span class="hyp-divider-badge">Pattern detected</span>
+            </div>
+            <!-- Hypothesis body -->
+            <div class="hyp-body" id="hyp-body">
+              <div class="hyp-body-label">Key Pattern</div>
+              <div class="hyp-body-text"><span id="hyp-text"></span><span class="hyp-cursor" id="hyp-cursor"></span></div>
+            </div>
+            <!-- Confidence -->
+            <div class="hyp-footer" id="hyp-footer">
+              <div class="hyp-conf-track"><div class="hyp-conf-fill" id="hyp-conf-fill"></div></div>
+              <span class="hyp-conf-val" id="hyp-conf-val">Confidence: 0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center" data-animate data-reveal-preset="soft-up" data-reveal-stagger="120">
+        <div class="flex flex-col gap-3" data-reveal-preset="soft-up">
+          <span class="step-number">03</span>
+          <h3 class="step-title">AI Reaches Its Conclusion</h3>
+          <p class="step-desc">After gathering enough insight, the AI develops a clear understanding of your state, predicts how it will evolve if nothing changes, creates a personalized recovery plan, and guides you through every step.</p>
+        </div>
+        <div class="mockup-screen max-w-[460px] mx-auto lg:mx-0" data-reveal-preset="spring-up" data-reveal-distance="120">
+          <div class="concl-wrap" id="concl-wrap">
+            <div class="concl-header" id="concl-header">
+              <span class="concl-header-dot"></span>
+              <span>AI Analysis</span>
+            </div>
+            <div class="concl-output" id="concl-output"></div>
+            <div class="concl-status" id="concl-status"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ──── WHY NAIMAB (comparison) ──── -->
+  <section class="bg-bg-alt py-20 lg:py-[92px] px-6 lg:px-16" id="why">
+    <div class="max-w-[1120px] mx-auto flex flex-col gap-10 lg:gap-12">
+
+      <div class="flex flex-col gap-4 max-w-[620px]" data-animate data-reveal-preset="soft-up">
+        <span class="section-label w-fit">Why Naimab</span>
+        <h2 class="section-heading text-4xl md:text-[50px]">Why most people notice burnout too late</h2>
+        <p class="text-muted text-lg leading-relaxed">Without data, burnout feels like "just being tired" — until it's a 3-month recovery. Naimab changes that.</p>
+      </div>
+
+      <div class="flex flex-col md:flex-row gap-5" data-animate data-reveal-stagger="110">
+        <!-- Negative -->
+        <div class="compare-card compare-negative flex-1" data-reveal-preset="blur-left" data-reveal-distance="72" style="background-image: url('burnout2.png'); background-size: cover; background-position: center;">
+          <div class="compare-title">Without Naimab</div>
+          <div class="compare-item"><span class="compare-icon">✕</span>"I'm fine" — until you're not</div>
+          <div class="compare-item"><span class="compare-icon">✕</span>Recovery takes 3–6 months of lost productivity</div>
+          <div class="compare-item"><span class="compare-icon">✕</span>Stress builds up invisibly for weeks</div>
+          <div class="compare-item"><span class="compare-icon">✕</span>"Try meditation" doesn't fix systemic overload</div>
+        </div>
+        <!-- Positive -->
+        <div class="compare-card compare-positive flex-1" data-reveal-preset="blur-right" data-reveal-distance="72" style="background-image: url('burnout1.png'); background-size: cover; background-position: center;">
+          <div class="compare-title">With Naimab</div>
+          <div class="compare-item"><span class="compare-icon">✓</span>You see the risk 2–4 weeks before crisis</div>
+          <div class="compare-item"><span class="compare-icon">✓</span>2 minutes a day.</div>
+          <div class="compare-item"><span class="compare-icon">✓</span>AI mentor that remembers everything you told it</div>
+          <div class="compare-item"><span class="compare-icon">✓</span>A concrete action plan — not generic advice</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ──── BUILT FOR ──── -->
+  <!-- ──── FOOTER CTA ──── -->
+  <section class="footer-cta py-20 lg:py-[96px] px-6 lg:px-16 text-center">
+    <div class="max-w-[620px] mx-auto flex flex-col items-center gap-6" data-animate data-reveal-preset="soft-up">
+      <h2 class="section-heading text-4xl md:text-[56px]">Don't wait until you crash</h2>
+      <p class="text-muted text-lg max-w-md leading-relaxed">Early access is free. No credit card. You'll be set up in 2 minutes.</p>
+      <div class="flex flex-col sm:flex-row gap-4" data-reveal-preset="blur-left" data-reveal-distance="50">
+        <button class="waitlist-btn nav-pill nav-pill-primary text-base px-10 py-4" type="button">
+          <span class="nav-pill-label nav-pill-label-ghost">Get Free Access</span>
+          <span class="nav-pill-label nav-pill-label-main">Get Free Access</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer class="border-t border-dark/6 bg-bg-main px-6 lg:px-16">
+  <div class="max-w-[1120px] mx-auto py-8">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6" data-animate data-reveal-preset="soft-up" data-reveal-stagger="110">
+      <div class="flex flex-col items-center md:items-start gap-2" data-reveal-preset="soft-up">
+        <span class="site-wordmark" style="font-size: 28px;">Naimab</span>
+        <p class="text-muted text-sm">See burnout coming. Stop it early.</p>
+      </div>
+      <div class="flex items-center gap-4" data-reveal-preset="blur-right" data-reveal-distance="50">
+        <a class="opacity-50 hover:opacity-80 transition-opacity" href="#" aria-label="LinkedIn">
+          <img alt="LinkedIn" class="w-5 h-5" src="LinkedIn_icon.svg.png"/>
+        </a>
+        <a class="opacity-50 hover:opacity-80 transition-opacity" href="#" aria-label="X">
+          <img alt="X" class="w-5 h-5" src="X_icon.svg.png"/>
+        </a>
+        <a class="opacity-50 hover:opacity-80 transition-opacity" href="#" aria-label="Instagram">
+          <img alt="Instagram" class="w-5 h-5" src="Instagram_logo_2016.svg.png"/>
+        </a>
+      </div>
+    </div>
+    <div class="mt-6 pt-5 border-t border-dark/6 flex flex-col sm:flex-row justify-between items-center gap-3" data-animate data-reveal-preset="soft-up">
+      <p class="text-muted text-xs">&copy; 2026 Naimab. All rights reserved.</p>
+      <div class="flex gap-6 text-xs text-muted">
+        <a href="privacy.html" class="hover:text-dark transition-colors">Privacy Policy</a>
+        <a href="#" class="hover:text-dark transition-colors">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /z-10 wrapper -->
+
+<!-- ════════════════ WAITLIST MODAL ════════════════ -->
+<div class="modal-overlay" id="waitlist-modal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-content">
+    <button class="modal-close" id="modal-close" aria-label="Close">
+      <span class="material-symbols-outlined text-lg">close</span>
+    </button>
+    <h3 class="text-2xl font-bold mb-2" style="font-family: var(--font-heading);">Get early access — free</h3>
+    <p class="text-muted text-sm mb-6">We'll email you once when it's your turn. That's it.</p>
+    <form id="waitlist-form" class="flex flex-col gap-4" novalidate>
+      <div>
+        <input type="text" id="waitlist-name" class="modal-input" placeholder="Your name" autocomplete="name"/>
+      </div>
+      <div>
+        <input type="email" id="waitlist-email" class="modal-input" placeholder="Your email" required autocomplete="email"/>
+        <p class="modal-error" id="email-error">Please enter a valid email address.</p>
+      </div>
+      <button type="submit" class="nav-pill nav-pill-primary w-full mt-2 py-3.5">
+        <span class="nav-pill-label nav-pill-label-ghost">Reserve My Spot</span>
+        <span class="nav-pill-label nav-pill-label-main">Reserve My Spot</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
