@@ -1116,7 +1116,6 @@ bindModalForm();
   let W, H, cx, cy, maxR;
   let elapsed = 0, lastTs = 0, rafId = 0, isRunning = false;
 
-  // Palette (RGB arrays for rgba helper)
   const ACCENT = [218, 182, 151];
   const DARK   = [43, 24, 10];
   const MUTED  = [148, 135, 124];
@@ -1124,6 +1123,20 @@ bindModalForm();
 
   const easeOut   = t => 1 - (1 - t) ** 3;
   const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+
+  // 3D perspective constants
+  const FOV = 500;
+  const PARALLAX_X = 0.14;
+  const PARALLAX_Y = 0.09;
+
+  // Mouse tracking for 3D parallax
+  let mouseNX = 0, mouseNY = 0, targetMX = 0, targetMY = 0;
+  wrap.addEventListener('mousemove', e => {
+    const rect = wrap.getBoundingClientRect();
+    targetMX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    targetMY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  });
+  wrap.addEventListener('mouseleave', () => { targetMX = 0; targetMY = 0; });
 
   function resize() {
     const r = wrap.getBoundingClientRect();
@@ -1136,7 +1149,6 @@ bindModalForm();
     maxR = Math.min(W, H) * 0.37;
   }
 
-  // Memory nodes — based on actual Naimab entity types
   const nodes = [
     { label: 'Sleep',     orbit: 0.68, speed:  0.12, size: 10, baseAngle: 0 },
     { label: 'Deadlines', orbit: 0.90, speed: -0.08, size: 8.5, baseAngle: 0.75 },
@@ -1149,24 +1161,24 @@ bindModalForm();
   ];
 
   nodes.forEach((n, i) => {
-    n.x = 0; n.y = 0; n.alpha = 0;
+    n.x = 0; n.y = 0; n.z = 0; n.alpha = 0;
+    n.px = 0; n.py = 0; n.ps = 1;
     n.phase = Math.random() * Math.PI * 2;
     n.appearAt = 1.5 + i * 0.35;
     n.flashEnd = 0;
-    n.corePulse = -1; // pulse progress toward AI core (-1 = inactive)
+    n.corePulse = -1;
   });
 
-  // Memory relations — connections between nodes
   const edges = [
-    { from: 1, to: 5, weight: 0.9 },   // Deadlines → Stress
-    { from: 5, to: 2, weight: 0.8 },   // Stress → Fatigue
-    { from: 5, to: 0, weight: 0.7 },   // Stress → Sleep
-    { from: 3, to: 5, weight: 0.6 },   // Walks relieves Stress
-    { from: 4, to: 2, weight: 0.5 },   // Meetings → Fatigue
-    { from: 0, to: 6, weight: 0.65 },  // Sleep → Focus
-    { from: 7, to: 0, weight: 0.7 },   // Recovery → Sleep
-    { from: 7, to: 3, weight: 0.55 },  // Recovery → Walks
-    { from: 1, to: 6, weight: 0.6 },   // Deadlines → Focus
+    { from: 1, to: 5, weight: 0.9 },
+    { from: 5, to: 2, weight: 0.8 },
+    { from: 5, to: 0, weight: 0.7 },
+    { from: 3, to: 5, weight: 0.6 },
+    { from: 4, to: 2, weight: 0.5 },
+    { from: 0, to: 6, weight: 0.65 },
+    { from: 7, to: 0, weight: 0.7 },
+    { from: 7, to: 3, weight: 0.55 },
+    { from: 1, to: 6, weight: 0.6 },
   ];
 
   edges.forEach(e => {
@@ -1176,27 +1188,35 @@ bindModalForm();
     e.pulseDir = 1;
   });
 
-  // Ambient particles
   const particles = Array.from({ length: 28 }, () => ({
     x: Math.random(), y: Math.random(),
     r: Math.random() * 1.2 + 0.4,
     vy: -(Math.random() * 0.0006 + 0.0002),
     vx: (Math.random() - 0.5) * 0.0003,
     a: Math.random() * 0.12 + 0.03,
+    z: (Math.random() - 0.5) * 120,
   }));
 
-  // Sonar rings from core
   const rings = [];
   let lastRingTime = -3;
 
-  // State
-  let convergence = 0;
+  const convergence = 0;
   let lastPulseTime = 0;
   let lastCorePulseTime = 0;
   const phrases = ['Observing patterns\u2026', 'Connecting insights\u2026', 'Building your model\u2026', 'Understanding you\u2026'];
   let currentPhrase = -1;
 
-  /* ── Reduced motion: draw one static frame ── */
+  /* ── 3D projection helper ── */
+  function project(x, y, z) {
+    const pf = FOV / (FOV + z);
+    return {
+      x: cx + (x - cx) * pf + z * mouseNX * PARALLAX_X,
+      y: cy + (y - cy) * pf + z * mouseNY * PARALLAX_Y,
+      s: pf,
+    };
+  }
+
+  /* ── Reduced motion ── */
   if (reduceMotionQuery.matches) {
     resize();
     nodes.forEach(n => {
@@ -1204,6 +1224,9 @@ bindModalForm();
       const orb = n.orbit * maxR;
       n.x = cx + Math.cos(n.baseAngle) * orb;
       n.y = cy + Math.sin(n.baseAngle) * orb * 0.72;
+      n.z = Math.sin(n.baseAngle) * orb * 0.45;
+      const p = project(n.x, n.y, n.z);
+      n.px = p.x; n.py = p.y; n.ps = p.s;
     });
     edges.forEach(e => { e.alpha = e.weight; });
     drawFrame(10);
@@ -1213,13 +1236,10 @@ bindModalForm();
 
   /* ── Update ── */
   function update(t) {
-    // Convergence cycle: every 10s, nodes pull inward
-    if (t > 6) {
-      const cyc = (t - 6) % 10;
-      convergence = cyc < 1.5 ? easeInOut(cyc / 1.5)
-                  : cyc < 3   ? easeInOut(1 - (cyc - 1.5) / 1.5)
-                  : 0;
-    }
+    // Smooth mouse lerp
+    mouseNX += (targetMX - mouseNX) * 0.06;
+    mouseNY += (targetMY - mouseNY) * 0.06;
+
 
     // Nodes
     nodes.forEach(n => {
@@ -1229,15 +1249,18 @@ bindModalForm();
       const orb = n.orbit * maxR * (1 - convergence * 0.25);
       n.x = cx + Math.cos(angle) * (orb + wobble);
       n.y = cy + Math.sin(angle) * (orb + wobble) * 0.72;
+      n.z = Math.sin(angle) * (orb + wobble) * 0.45;
 
-      // Core-bound pulse progress
+      // Project to 3D
+      const p = project(n.x, n.y, n.z);
+      n.px = p.x; n.py = p.y; n.ps = p.s;
+
       if (n.corePulse >= 0) {
         n.corePulse += 0.015;
         if (n.corePulse > 1) n.corePulse = -1;
       }
     });
 
-    // Trigger core-bound pulses (data flowing to AI)
     if (t > 3 && t - lastCorePulseTime > 0.8 + Math.random() * 0.6) {
       const cands = nodes.filter(n => n.corePulse < 0 && n.alpha > 0.5);
       if (cands.length) {
@@ -1246,7 +1269,6 @@ bindModalForm();
       }
     }
 
-    // Edges
     edges.forEach(e => {
       e.alpha = easeOut(Math.min(1, Math.max(0, (t - e.appearAt) / 1.0))) * e.weight;
       if (e.pulseProgress >= 0) {
@@ -1258,7 +1280,6 @@ bindModalForm();
       }
     });
 
-    // Trigger activation pulses
     if (t > 4.5 && t - lastPulseTime > 1.4 + Math.random() * 1.2) {
       const cands = edges.filter(e => e.pulseProgress < 0 && e.alpha > 0.2);
       if (cands.length) {
@@ -1269,18 +1290,15 @@ bindModalForm();
       }
     }
 
-    // Sonar rings
     if (t - lastRingTime > 3.5) { rings.push(t); lastRingTime = t; }
     while (rings.length && t - rings[0] > 5) rings.shift();
 
-    // Particles
     particles.forEach(p => {
       p.y += p.vy; p.x += p.vx;
       if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); }
       if (p.x < -0.02 || p.x > 1.02) p.x = Math.random();
     });
 
-    // Status text cycling
     const pi = Math.floor(t / 3) % phrases.length;
     if (pi !== currentPhrase && statusEl) {
       currentPhrase = pi;
@@ -1291,24 +1309,29 @@ bindModalForm();
     }
   }
 
-  /* ── Draw ── */
+  /* ── Draw (3D-enhanced) ── */
   function drawFrame(t) {
     ctx.clearRect(0, 0, W, H);
+
+    // Core projected position (z = 0, subtle mouse response)
+    const cpx = cx + mouseNX * 4;
+    const cpy = cy + mouseNY * 3;
 
     // Background
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, W, H);
-    const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 1.8);
+    const bg = ctx.createRadialGradient(cpx, cpy, 0, cpx, cpy, maxR * 1.8);
     bg.addColorStop(0, rgba(ACCENT, 0.035 + convergence * 0.03));
     bg.addColorStop(1, 'transparent');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Particles
+    // Particles with depth
     particles.forEach(p => {
+      const pp = project(p.x * W, p.y * H, p.z);
       ctx.beginPath();
-      ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(ACCENT, p.a);
+      ctx.arc(pp.x, pp.y, p.r * pp.s, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(ACCENT, p.a * (0.6 + pp.s * 0.4));
       ctx.fill();
     });
 
@@ -1319,45 +1342,51 @@ bindModalForm();
       const a = Math.max(0, 0.18 - age * 0.036);
       if (a <= 0) return;
       ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.arc(cpx, cpy, r, 0, Math.PI * 2);
       ctx.strokeStyle = rgba(ACCENT, a);
       ctx.lineWidth = 0.7;
       ctx.stroke();
     });
 
-    // Node-to-core connections (primary links to AI)
-    nodes.forEach(n => {
+    // Sort nodes back-to-front for correct 3D overlap
+    const sorted = [...nodes].sort((a, b) => a.z - b.z);
+
+    // Node-to-core connections (behind nodes)
+    sorted.forEach(n => {
       if (n.alpha < 0.05) return;
       const al = (0.2 + convergence * 0.25) * n.alpha;
+      const depthDim = 0.6 + n.ps * 0.4;
 
-      // Curved line to core
-      const dx = n.x - cx, dy = n.y - cy;
-      const mx = cx + dx * 0.5 + dy * 0.08;
-      const my = cy + dy * 0.5 - dx * 0.08;
+      const dx = n.px - cpx, dy = n.py - cpy;
+      const mx = cpx + dx * 0.5 + dy * 0.08;
+      const my = cpy + dy * 0.5 - dx * 0.08;
       ctx.beginPath();
-      ctx.moveTo(n.x, n.y);
-      ctx.quadraticCurveTo(mx, my, cx, cy);
-      ctx.strokeStyle = rgba(ACCENT, al * 0.5);
-      ctx.lineWidth = 1.8 + convergence * 0.6;
+      ctx.moveTo(n.px, n.py);
+      ctx.quadraticCurveTo(mx, my, cpx, cpy);
+      ctx.strokeStyle = rgba(ACCENT, al * 0.5 * depthDim);
+      ctx.lineWidth = (1.8 + convergence * 0.6) * n.ps;
       ctx.stroke();
 
-      // Traveling pulse toward AI core
+      // Traveling pulse toward core
       if (n.corePulse >= 0 && n.corePulse <= 1) {
         const u = n.corePulse;
-        const px = (1 - u) ** 2 * n.x + 2 * (1 - u) * u * mx + u ** 2 * cx;
-        const py = (1 - u) ** 2 * n.y + 2 * (1 - u) * u * my + u ** 2 * cy;
+        const px = (1 - u) ** 2 * n.px + 2 * (1 - u) * u * mx + u ** 2 * cpx;
+        const py = (1 - u) ** 2 * n.py + 2 * (1 - u) * u * my + u ** 2 * cpy;
+        const pulseZ = n.z * (1 - u);
+        const pp = FOV / (FOV + pulseZ);
+        const pr = 12 * pp;
 
-        const pg = ctx.createRadialGradient(px, py, 0, px, py, 12);
+        const pg = ctx.createRadialGradient(px, py, 0, px, py, pr);
         pg.addColorStop(0, rgba(ACCENT, 0.9));
         pg.addColorStop(0.35, rgba(ACCENT, 0.35));
         pg.addColorStop(1, rgba(ACCENT, 0));
         ctx.fillStyle = pg;
         ctx.beginPath();
-        ctx.arc(px, py, 12, 0, Math.PI * 2);
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.arc(px, py, 2.5 * pp, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.fill();
       }
@@ -1369,132 +1398,178 @@ bindModalForm();
       const nA = nodes[e.from], nB = nodes[e.to];
       const minA = Math.min(nA.alpha, nB.alpha);
       const al = e.alpha * minA * (1 + convergence * 0.8);
+      const edgeDepth = 0.6 + ((nA.ps + nB.ps) / 2) * 0.4;
 
-      // Curved line
-      const mx = (nA.x + nB.x) / 2 + (cy - (nA.y + nB.y) / 2) * 0.12;
-      const my = (nA.y + nB.y) / 2 - (cx - (nA.x + nB.x) / 2) * 0.06;
+      const mx = (nA.px + nB.px) / 2 + (cpy - (nA.py + nB.py) / 2) * 0.12;
+      const my = (nA.py + nB.py) / 2 - (cpx - (nA.px + nB.px) / 2) * 0.06;
       ctx.beginPath();
-      ctx.moveTo(nA.x, nA.y);
-      ctx.quadraticCurveTo(mx, my, nB.x, nB.y);
-      ctx.strokeStyle = rgba(ACCENT, al * 0.3);
-      ctx.lineWidth = 1.2 + convergence * 0.5;
+      ctx.moveTo(nA.px, nA.py);
+      ctx.quadraticCurveTo(mx, my, nB.px, nB.py);
+      ctx.strokeStyle = rgba(ACCENT, al * 0.3 * edgeDepth);
+      ctx.lineWidth = (1.2 + convergence * 0.5) * ((nA.ps + nB.ps) / 2);
       ctx.stroke();
 
-      // Traveling pulse dot
+      // Traveling pulse
       if (e.pulseProgress >= 0 && e.pulseProgress <= 1) {
         const u = e.pulseDir > 0 ? e.pulseProgress : 1 - e.pulseProgress;
-        const px = (1 - u) ** 2 * nA.x + 2 * (1 - u) * u * mx + u ** 2 * nB.x;
-        const py = (1 - u) ** 2 * nA.y + 2 * (1 - u) * u * my + u ** 2 * nB.y;
+        const px = (1 - u) ** 2 * nA.px + 2 * (1 - u) * u * mx + u ** 2 * nB.px;
+        const py = (1 - u) ** 2 * nA.py + 2 * (1 - u) * u * my + u ** 2 * nB.py;
+        const pz = nA.z + (nB.z - nA.z) * u;
+        const pp = FOV / (FOV + pz);
+        const pr = 13 * pp;
 
-        const pg = ctx.createRadialGradient(px, py, 0, px, py, 13);
+        const pg = ctx.createRadialGradient(px, py, 0, px, py, pr);
         pg.addColorStop(0, rgba(ACCENT, 0.85));
         pg.addColorStop(0.3, rgba(ACCENT, 0.35));
         pg.addColorStop(1, rgba(ACCENT, 0));
         ctx.fillStyle = pg;
         ctx.beginPath();
-        ctx.arc(px, py, 13, 0, Math.PI * 2);
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.arc(px, py, 2.5 * pp, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.fill();
       }
     });
 
-    // Core
+    // Core (3D sphere)
     const coreAppear = easeOut(Math.min(1, t / 1.2));
     const corePulse = 1 + Math.sin(t * 1.8) * 0.06 + convergence * 0.15;
     const coreR = 18 * corePulse;
 
+    // Core shadow
+    ctx.beginPath();
+    ctx.ellipse(cpx + 1, cpy + coreR * 1.8, coreR * 1.2, coreR * 0.25, 0, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(DARK, 0.06 * coreAppear);
+    ctx.fill();
+
     // Core outer glow
-    const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 5);
+    const cg = ctx.createRadialGradient(cpx, cpy, 0, cpx, cpy, coreR * 5);
     cg.addColorStop(0, rgba(ACCENT, (0.28 + convergence * 0.2) * coreAppear));
     cg.addColorStop(0.4, rgba(ACCENT, (0.1 + convergence * 0.08) * coreAppear));
     cg.addColorStop(1, rgba(ACCENT, 0));
     ctx.fillStyle = cg;
     ctx.beginPath();
-    ctx.arc(cx, cy, coreR * 5, 0, Math.PI * 2);
+    ctx.arc(cpx, cpy, coreR * 5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Core body
-    const cb = ctx.createRadialGradient(cx, cy - coreR * 0.3, 0, cx, cy, coreR);
-    cb.addColorStop(0, rgba([255, 245, 235], 0.95 * coreAppear));
-    cb.addColorStop(1, rgba(ACCENT, 0.85 * coreAppear));
+    // Core body — 3D sphere gradient (light from top-left)
+    const cb = ctx.createRadialGradient(
+      cpx - coreR * 0.35, cpy - coreR * 0.35, coreR * 0.1,
+      cpx, cpy, coreR
+    );
+    cb.addColorStop(0, `rgba(255,252,247,${0.98 * coreAppear})`);
+    cb.addColorStop(0.45, rgba(ACCENT, 0.9 * coreAppear));
+    cb.addColorStop(1, rgba(DARK, 0.35 * coreAppear));
     ctx.fillStyle = cb;
     ctx.beginPath();
-    ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+    ctx.arc(cpx, cpy, coreR, 0, Math.PI * 2);
     ctx.fill();
 
-    // Core inner highlight
+    // Core rim light (bottom-right edge)
     ctx.beginPath();
-    ctx.arc(cx, cy - coreR * 0.15, coreR * 0.4, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${0.35 * coreAppear})`;
+    ctx.arc(cpx, cpy, coreR, 0, Math.PI * 2);
+    const rim = ctx.createRadialGradient(
+      cpx + coreR * 0.4, cpy + coreR * 0.4, coreR * 0.6,
+      cpx, cpy, coreR
+    );
+    rim.addColorStop(0, 'transparent');
+    rim.addColorStop(0.85, 'transparent');
+    rim.addColorStop(1, rgba(ACCENT, 0.4 * coreAppear));
+    ctx.fillStyle = rim;
     ctx.fill();
 
-    // "AI" label in the core
+    // Core specular highlight
+    ctx.beginPath();
+    ctx.ellipse(cpx - coreR * 0.22, cpy - coreR * 0.22, coreR * 0.32, coreR * 0.22, -0.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${0.55 * coreAppear})`;
+    ctx.fill();
+
+    // "AI" label
     ctx.font = `700 ${coreR * 0.85}px "Geist","Geist Placeholder",sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = `rgba(255,255,255,${(0.85 + convergence * 0.15) * coreAppear})`;
-    ctx.fillText('AI', cx, cy + coreR * 0.05);
+    ctx.fillText('AI', cpx, cpy + coreR * 0.05);
 
-    // Convergence white flash
-    if (convergence > 0.8) {
-      const fa = (convergence - 0.8) * 2.5;
-      ctx.beginPath();
-      ctx.arc(cx, cy, coreR * 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${fa * 0.25})`;
-      ctx.fill();
-    }
 
-    // Nodes
-    nodes.forEach(n => {
+    // Nodes — 3D spheres, sorted back-to-front
+    // Pass 1: shadows
+    sorted.forEach(n => {
       if (n.alpha < 0.02) return;
       const flash = n.flashEnd > t ? (n.flashEnd - t) / 0.35 : 0;
-      const sz = n.size * (1 + flash * 0.4 + convergence * 0.12);
+      const sz = n.size * n.ps * (1 + flash * 0.4 + convergence * 0.12);
 
-      // Node glow
+      ctx.beginPath();
+      ctx.ellipse(n.px + 1, n.py + sz + 5, sz * 0.75, sz * 0.18, 0, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(DARK, 0.07 * n.alpha * n.ps);
+      ctx.fill();
+    });
+
+    // Pass 2: spheres + labels
+    sorted.forEach(n => {
+      if (n.alpha < 0.02) return;
+      const flash = n.flashEnd > t ? (n.flashEnd - t) / 0.35 : 0;
+      const sz = n.size * n.ps * (1 + flash * 0.4 + convergence * 0.12);
+      const depthAlpha = 0.55 + n.ps * 0.45;
+
+      // Glow on flash / convergence
       if (flash > 0 || convergence > 0.1) {
         const gr = sz * (2.5 + flash * 2);
-        const ng = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, gr);
-        ng.addColorStop(0, rgba(ACCENT, Math.max(flash * 0.5, convergence * 0.18) * n.alpha));
+        const ng = ctx.createRadialGradient(n.px, n.py, 0, n.px, n.py, gr);
+        ng.addColorStop(0, rgba(ACCENT, Math.max(flash * 0.5, convergence * 0.18) * n.alpha * depthAlpha));
         ng.addColorStop(1, rgba(ACCENT, 0));
         ctx.fillStyle = ng;
         ctx.beginPath();
-        ctx.arc(n.x, n.y, gr, 0, Math.PI * 2);
+        ctx.arc(n.px, n.py, gr, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Node body
+      // 3D sphere body — light from top-left
       const nc = flash > 0.3 ? ACCENT : DARK;
+      const bodyA = (0.5 + flash * 0.45 + convergence * 0.2) * n.alpha * depthAlpha;
+      const sGrad = ctx.createRadialGradient(
+        n.px - sz * 0.32, n.py - sz * 0.32, sz * 0.08,
+        n.px, n.py, sz
+      );
+      sGrad.addColorStop(0, `rgba(255,252,248,${Math.min(1, bodyA + 0.35)})`);
+      sGrad.addColorStop(0.4, rgba(nc, bodyA));
+      sGrad.addColorStop(1, rgba(DARK, bodyA * 0.6));
+      ctx.fillStyle = sGrad;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, sz, 0, Math.PI * 2);
-      ctx.fillStyle = rgba(nc, (0.5 + flash * 0.45 + convergence * 0.2) * n.alpha);
+      ctx.arc(n.px, n.py, sz, 0, Math.PI * 2);
       ctx.fill();
 
-      // Node inner highlight
+      // Rim light (bottom-right edge)
+      const rimG = ctx.createRadialGradient(
+        n.px + sz * 0.35, n.py + sz * 0.35, sz * 0.5,
+        n.px, n.py, sz
+      );
+      rimG.addColorStop(0, 'transparent');
+      rimG.addColorStop(0.8, 'transparent');
+      rimG.addColorStop(1, rgba(ACCENT, 0.3 * n.alpha * depthAlpha));
+      ctx.fillStyle = rimG;
       ctx.beginPath();
-      ctx.arc(n.x, n.y, sz * 0.35, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${(0.35 + flash * 0.3) * n.alpha})`;
+      ctx.arc(n.px, n.py, sz, 0, Math.PI * 2);
       ctx.fill();
 
-      // Label
-      ctx.font = '500 12px "Geist","Geist Placeholder",sans-serif';
+      // Specular highlight
+      ctx.beginPath();
+      ctx.ellipse(n.px - sz * 0.2, n.py - sz * 0.2, sz * 0.28, sz * 0.18, -0.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${(0.45 + flash * 0.3) * n.alpha * depthAlpha})`;
+      ctx.fill();
+
+      // Label — scale with depth
+      const fontSize = Math.round(12 * n.ps);
+      ctx.font = `500 ${fontSize}px "Geist","Geist Placeholder",sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = rgba(MUTED, (0.5 + flash * 0.3 + convergence * 0.15) * n.alpha);
-      ctx.fillText(n.label, n.x, n.y + sz + 8);
+      ctx.fillStyle = rgba(MUTED, (0.5 + flash * 0.3 + convergence * 0.15) * n.alpha * depthAlpha);
+      ctx.fillText(n.label, n.px, n.py + sz + 7);
     });
 
-    // Convergence ring
-    if (convergence > 0.5) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, maxR * 1.2 * convergence, 0, Math.PI * 2);
-      ctx.strokeStyle = rgba(ACCENT, (convergence - 0.5) * 0.3);
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
   }
 
   /* ── Loop ── */
