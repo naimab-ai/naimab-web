@@ -20,7 +20,7 @@ export async function onRequestPost(context) {
       body: JSON.stringify({
         from: 'Naimab <hello@naimab.dev>',
         to: [email],
-        subject: "You're on the Naimab waitlist 🌱",
+        subject: "You're on the Naimab waitlist",
         html: thankYouEmail(firstName),
       }),
     });
@@ -58,75 +58,77 @@ function thankYouEmail(firstName) {
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>You're on the Naimab waitlist</title>
 </head>
-<body style="margin:0;padding:0;background:#F7F4F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F7F4F0;padding:40px 16px;">
+<body style="margin:0;padding:0;background:#f7f3ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f3ee;padding:48px 16px;">
     <tr><td align="center">
-      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+      <table width="100%" style="max-width:520px;">
 
-        <!-- Header -->
+        <!-- Logo -->
         <tr>
-          <td style="background:linear-gradient(135deg,#2b180a,#3e2407);padding:36px 40px;text-align:center;">
-            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:12px;padding:8px 20px;">
-              <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">naimab</span>
-            </div>
+          <td style="padding:0 0 32px;text-align:center;">
+            <span style="font-size:18px;font-weight:700;color:#2b180a;letter-spacing:-0.5px;">naimab</span>
           </td>
         </tr>
 
-        <!-- Body -->
+        <!-- Card -->
         <tr>
-          <td style="padding:40px 40px 32px;">
-            <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#1a1a1a;line-height:1.3;">
-              Hey ${escHtml(firstName)}, you're in! 🎉
+          <td style="background:#ffffff;border-radius:20px;padding:48px 48px 40px;">
+
+            <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#dab697;text-transform:uppercase;letter-spacing:0.1em;">Waitlist confirmed</p>
+
+            <h1 style="margin:0 0 24px;font-size:26px;font-weight:700;color:#1a1a1a;line-height:1.25;letter-spacing:-0.03em;">
+              Thank you, ${escHtml(firstName)}.
             </h1>
-            <p style="margin:0 0 20px;font-size:16px;color:#555;line-height:1.6;">
-              Thank you for joining the Naimab waitlist. You're among the first people who care about building a healthier relationship with work — and that means a lot to us.
+
+            <p style="margin:0 0 16px;font-size:16px;color:#5c5047;line-height:1.7;">
+              We genuinely appreciate you signing up. Early supporters like you are the reason we're building Naimab — and knowing that people care enough to wait means a great deal to us.
             </p>
-            <p style="margin:0 0 20px;font-size:16px;color:#555;line-height:1.6;">
-              We'll reach out as soon as early access opens. Until then, take care of yourself.
+            <p style="margin:0 0 32px;font-size:16px;color:#5c5047;line-height:1.7;">
+              When early access opens, you'll be among the first to hear. We won't send anything else in the meantime.
             </p>
 
             <!-- Divider -->
-            <div style="border-top:1px solid #f0ede8;margin:28px 0;"></div>
+            <div style="border-top:1px solid #ede8e2;margin:0 0 32px;"></div>
 
             <!-- What to expect -->
-            <p style="margin:0 0 16px;font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:0.08em;">What to expect</p>
+            <p style="margin:0 0 16px;font-size:12px;font-weight:700;color:#2b180a;text-transform:uppercase;letter-spacing:0.1em;">What comes next</p>
             <table cellpadding="0" cellspacing="0" width="100%">
               <tr>
-                <td style="padding:8px 0;">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2b180a;margin-right:10px;vertical-align:middle;"></span>
-                  <span style="font-size:15px;color:#555;">Early access to Naimab before public launch</span>
+                <td style="padding:7px 0;font-size:15px;color:#5c5047;line-height:1.5;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dab697;margin-right:12px;vertical-align:middle;"></span>Early access before the public launch
                 </td>
               </tr>
               <tr>
-                <td style="padding:8px 0;">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2b180a;margin-right:10px;vertical-align:middle;"></span>
-                  <span style="font-size:15px;color:#555;">No spam — only meaningful updates</span>
+                <td style="padding:7px 0;font-size:15px;color:#5c5047;line-height:1.5;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dab697;margin-right:12px;vertical-align:middle;"></span>One email when it's ready — nothing more
                 </td>
               </tr>
               <tr>
-                <td style="padding:8px 0;">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2b180a;margin-right:10px;vertical-align:middle;"></span>
-                  <span style="font-size:15px;color:#555;">A chance to shape the product with your feedback</span>
+                <td style="padding:7px 0;font-size:15px;color:#5c5047;line-height:1.5;">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dab697;margin-right:12px;vertical-align:middle;"></span>An opportunity to shape the product with direct feedback
                 </td>
               </tr>
             </table>
-          </td>
-        </tr>
 
-        <!-- CTA -->
-        <tr>
-          <td style="padding:0 40px 40px;text-align:center;">
-            <a href="https://naimab.dev" style="display:inline-block;background:#2b180a;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:100px;">
-              Visit naimab.dev
-            </a>
+            <!-- CTA -->
+            <table cellpadding="0" cellspacing="0" width="100%" style="margin-top:36px;">
+              <tr>
+                <td align="center">
+                  <a href="https://naimab.dev" style="display:inline-block;background:#2b180a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:14px 36px;border-radius:100px;letter-spacing:0.01em;">
+                    Visit naimab.dev
+                  </a>
+                </td>
+              </tr>
+            </table>
+
           </td>
         </tr>
 
         <!-- Footer -->
         <tr>
-          <td style="background:#fcf6ef;padding:24px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#999;line-height:1.6;">
-              You received this email because you signed up at naimab.dev.<br/>
+          <td style="padding:28px 0;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#a89e94;line-height:1.6;">
+              You received this because you joined the waitlist at naimab.dev.<br/>
               © 2026 Naimab. All rights reserved.
             </p>
           </td>
