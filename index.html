@@ -37,12 +37,23 @@ tailwind.config = {
 </script>
 </head>
 
-<body class="bg-bg-main text-dark font-body overflow-x-hidden" style="--selection-background-color:#e8d3c0;--selection-color:#2b180a;">
+<body class="bg-bg-main text-dark font-body overflow-x-hidden preload-intro" style="--selection-background-color:#e8d3c0;--selection-color:#2b180a;">
 
 <!-- ── Grain texture ── -->
 <div class="grain-overlay" aria-hidden="true"></div>
 
-<div class="relative z-10 flex flex-col min-h-screen">
+<!-- ── Brand intro ── -->
+<div class="brand-intro" id="brand-intro" aria-hidden="true">
+  <div class="brand-intro-panel">
+    <div class="brand-intro-wordmark" aria-label="Naimab">
+      <span class="brand-intro-wordmark-live" id="brand-intro-live"></span>
+      <span class="brand-intro-cursor" id="brand-intro-cursor"></span>
+    </div>
+    <p class="brand-intro-caption">AI burnout prevention</p>
+  </div>
+</div>
+
+<div class="relative z-10 flex flex-col min-h-screen" id="site-shell">
 
 <!-- ════════════════ NAVIGATION ════════════════ -->
 <header class="site-nav" id="main-header">
@@ -299,10 +310,10 @@ tailwind.config = {
         <a class="opacity-50 hover:opacity-80 transition-opacity" href="#" aria-label="LinkedIn">
           <img alt="LinkedIn" class="w-5 h-5" src="LinkedIn_icon.svg.png"/>
         </a>
-        <a class="opacity-50 hover:opacity-80 transition-opacity" href="#" aria-label="X">
+        <a class="opacity-50 hover:opacity-80 transition-opacity" href="https://x.com/naimab_ai" aria-label="X" target="_blank" rel="noopener noreferrer">
           <img alt="X" class="w-5 h-5" src="X_icon.svg.png"/>
         </a>
-        <a class="opacity-50 hover:opacity-80 transition-opacity" href="#" aria-label="Instagram">
+        <a class="opacity-50 hover:opacity-80 transition-opacity" href="https://www.instagram.com/naimab_ai/" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
           <img alt="Instagram" class="w-5 h-5" src="Instagram_logo_2016.svg.png"/>
         </a>
       </div>

@@ -91,6 +91,9 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+body.preload-intro {
+  overflow: hidden !important;
+}
 button, input, textarea, select {
   font: inherit;
   font-feature-settings: inherit;
@@ -124,6 +127,118 @@ button, input, textarea, select {
   background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%3E%3Cfilter%20id%3D%22g%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.85%22%20numOctaves%3D%224%22%20stitchTiles%3D%22stitch%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22300%22%20height%3D%22300%22%20filter%3D%22url(%23g)%22%2F%3E%3C%2Fsvg%3E");
 }
 
+/* ── Landing intro ── */
+#site-shell {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+body.preload-intro #site-shell {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.brand-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(218, 182, 151, 0.26), transparent 34%),
+    linear-gradient(180deg, rgba(252, 246, 239, 0.985), rgba(246, 240, 233, 0.995));
+  transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.brand-intro::before,
+.brand-intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.brand-intro::before {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.82), transparent 30%),
+    radial-gradient(circle at 12% 86%, rgba(218, 182, 151, 0.14), transparent 26%),
+    radial-gradient(circle at 88% 12%, rgba(43, 24, 10, 0.08), transparent 22%);
+}
+.brand-intro::after {
+  inset: 24px;
+  border: 1px solid rgba(43, 24, 10, 0.06);
+  border-radius: 32px;
+}
+.brand-intro-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+.brand-intro-wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0.95em;
+  font-family: var(--font-heading);
+  font-feature-settings: var(--halant-features);
+  font-size: clamp(72px, 12vw, 168px);
+  font-weight: 400;
+  letter-spacing: -0.075em;
+  line-height: 0.9;
+  color: var(--color-dark);
+  white-space: nowrap;
+}
+.brand-intro-wordmark-live {
+  display: inline-flex;
+  align-items: center;
+}
+.brand-intro-letter {
+  display: inline-block;
+  opacity: 0.001;
+  transform: translateY(80px);
+  filter: blur(10px);
+  will-change: transform, opacity, filter;
+  transition:
+    opacity 0.8s cubic-bezier(0.56, 0.22, 0.05, 0.99),
+    transform 0.8s cubic-bezier(0.56, 0.22, 0.05, 0.99),
+    filter 0.8s cubic-bezier(0.56, 0.22, 0.05, 0.99);
+}
+.brand-intro-letter.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+.brand-intro-cursor {
+  display: none;
+}
+.brand-intro-caption {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(43, 24, 10, 0.42);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.brand-intro.is-caption-visible .brand-intro-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+.brand-intro.is-exiting {
+  opacity: 0;
+  pointer-events: none;
+}
+.brand-intro.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
 /* ── Nav ── */
 .site-nav {
   position: fixed;
@@ -254,6 +369,23 @@ button, input, textarea, select {
 }
 
 @media (max-width: 809.98px) {
+  .brand-intro {
+    padding: 20px;
+  }
+
+  .brand-intro::after {
+    inset: 16px;
+    border-radius: 24px;
+  }
+
+  .brand-intro-panel {
+    gap: 14px;
+  }
+
+  .brand-intro-caption {
+    letter-spacing: 0.18em;
+  }
+
   .site-nav-inner {
     height: 64px;
     padding: 24px 16px;
@@ -696,6 +828,17 @@ button, input, textarea, select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #site-shell {
+    transition: none;
+  }
+
+  .brand-intro,
+  .brand-intro-panel,
+  .brand-intro-caption,
+  .brand-intro-letter {
+    transition: none;
+  }
+
   .marquee-track {
     animation: none;
   }

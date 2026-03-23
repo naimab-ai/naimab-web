@@ -5,6 +5,12 @@
 // ── Entrance animations (perfectly.so-inspired) ──
 const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 const REVEAL_PRESETS = {
   'soft-up': {
     duration: 1080,
@@ -426,23 +432,6 @@ function animateRevealGroup(group) {
   group.dataset.revealDone = 'true';
 }
 
-const revealGroups = Array.from(document.querySelectorAll('[data-animate]'));
-revealGroups.forEach(armRevealGroup);
-
-if (!reduceMotionQuery.matches) {
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      animateRevealGroup(entry.target);
-      revealObserver.unobserve(entry.target);
-    });
-  }, { threshold: 0.18, rootMargin: '0px 0px -12% 0px' });
-
-  revealGroups.forEach((group) => revealObserver.observe(group));
-} else {
-  revealGroups.forEach(animateRevealGroup);
-}
-
 function getHeroSequence() {
   const intro = [];
   const heroSection = document.querySelector('main section');
@@ -465,28 +454,213 @@ function getHeroSequence() {
   return intro;
 }
 
-const heroSequence = getHeroSequence();
-heroSequence.forEach(({ target }) => armRevealTarget(target));
+let revealSystemPrepared = false;
+let revealSystemStarted = false;
+let preparedRevealGroups = [];
+let preparedHeroSequence = [];
 
-const heroStatsGrid = document.querySelector('main section .hero-stagger.grid');
-if (heroStatsGrid) {
-  resetRevealStyles(heroStatsGrid);
+function prepareRevealSystem() {
+  if (revealSystemPrepared) return;
+  revealSystemPrepared = true;
+
+  preparedRevealGroups = Array.from(document.querySelectorAll('[data-animate]'));
+  preparedRevealGroups.forEach(armRevealGroup);
+  preparedHeroSequence = getHeroSequence();
+  preparedHeroSequence.forEach(({ target }) => armRevealTarget(target));
+
+  const heroStatsGrid = document.querySelector('main section .hero-stagger.grid');
+  if (heroStatsGrid) {
+    resetRevealStyles(heroStatsGrid);
+  }
+
+  const heroButtonsRow = document.querySelector('main section .hero-actions');
+  if (heroButtonsRow) {
+    resetRevealStyles(heroButtonsRow);
+  }
 }
 
-const heroButtonsRow = document.querySelector('main section .hero-actions');
-if (heroButtonsRow) {
-  resetRevealStyles(heroButtonsRow);
-}
+function startHeroSequence() {
+  const heroSequence = preparedHeroSequence.length > 0 ? preparedHeroSequence : getHeroSequence();
 
-if (!reduceMotionQuery.matches) {
-  requestAnimationFrame(() => {
+  if (!reduceMotionQuery.matches) {
     requestAnimationFrame(() => {
-      heroSequence.forEach(({ target, delay }) => animateRevealTarget(target, delay));
+      requestAnimationFrame(() => {
+        heroSequence.forEach(({ target, delay }) => animateRevealTarget(target, delay));
+      });
     });
-  });
-} else {
-  heroSequence.forEach(({ target }) => animateRevealTarget(target));
+  } else {
+    heroSequence.forEach(({ target }) => animateRevealTarget(target));
+  }
 }
+
+function initializeRevealSystem() {
+  if (revealSystemStarted) return;
+  revealSystemStarted = true;
+
+  prepareRevealSystem();
+  const revealGroups = preparedRevealGroups;
+
+  if (!reduceMotionQuery.matches) {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        animateRevealGroup(entry.target);
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -12% 0px' });
+
+    revealGroups.forEach((group) => revealObserver.observe(group));
+  } else {
+    revealGroups.forEach(animateRevealGroup);
+  }
+
+  startHeroSequence();
+}
+
+const brandIntro = document.getElementById('brand-intro');
+const brandIntroLive = document.getElementById('brand-intro-live');
+const BRAND_INTRO_TEXT = 'Naimab';
+const BRAND_INTRO_EXIT_DURATION = 1000;
+
+function createBrandIntroLetter(char) {
+  const letter = document.createElement('span');
+  letter.className = 'brand-intro-letter';
+  letter.textContent = char;
+  return letter;
+}
+
+function renderBrandIntroInstant() {
+  if (!brandIntroLive) return;
+  brandIntroLive.textContent = '';
+
+  Array.from(BRAND_INTRO_TEXT).forEach((char) => {
+    const letter = createBrandIntroLetter(char);
+    letter.classList.add('is-visible');
+    brandIntroLive.appendChild(letter);
+  });
+}
+
+async function waitForBrandIntroFonts() {
+  if (!document.fonts?.load) return;
+
+  try {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load('400 96px Halant'),
+        document.fonts.load('500 16px Geist'),
+      ]),
+      wait(280),
+    ]);
+  } catch {
+    // Fall back to the already-rendered font stack if remote fonts are slow.
+  }
+}
+
+let panelRiseAnimation = null;
+
+async function playBrandIntroReveal() {
+  if (!brandIntroLive) return;
+  brandIntroLive.textContent = '';
+
+  const panel = document.querySelector('.brand-intro-panel');
+
+  // Create all letters at once (hidden via CSS)
+  const letters = Array.from(BRAND_INTRO_TEXT).map((char) => {
+    const letter = createBrandIntroLetter(char);
+    brandIntroLive.appendChild(letter);
+    return letter;
+  });
+
+  // Animate panel container rising from below
+  if (panel) {
+    panelRiseAnimation = panel.animate([
+      { transform: 'translateY(160px)', opacity: 0.001 },
+      { transform: 'translateY(0)', opacity: 1 },
+    ], {
+      duration: 1600,
+      easing: 'cubic-bezier(0.56, 0.22, 0.05, 0.99)',
+      fill: 'forwards',
+    });
+  }
+
+  // Stagger per-letter blur reveal after a delay
+  await wait(400);
+
+  for (let i = 0; i < letters.length; i++) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        letters[i].classList.add('is-visible');
+      });
+    });
+    if (i < letters.length - 1) await wait(75);
+  }
+}
+
+async function runBrandIntro() {
+  if (!brandIntro || !brandIntroLive) return;
+
+  if (reduceMotionQuery.matches) {
+    renderBrandIntroInstant();
+    brandIntro.classList.add('is-hidden');
+    return;
+  }
+
+  await waitForBrandIntroFonts();
+  await wait(80);
+  await playBrandIntroReveal();
+
+  brandIntro.classList.add('is-caption-visible');
+  await wait(900);
+
+  // Cancel panel rise before starting exit
+  if (panelRiseAnimation) {
+    panelRiseAnimation.cancel();
+    panelRiseAnimation = null;
+  }
+
+  // Begin crossfade: reveal site-shell and start brand exit simultaneously
+  document.body.classList.remove('preload-intro');
+  brandIntro.classList.add('is-exiting');
+
+  // Slide panel off-screen
+  const panel = document.querySelector('.brand-intro-panel');
+  if (panel) {
+    panel.animate([
+      { transform: 'translateY(0)', opacity: 1 },
+      { transform: 'translateY(-400px)', opacity: 0 },
+    ], {
+      duration: 900,
+      easing: 'cubic-bezier(0.96, -0.02, 0.38, 1.01)',
+      fill: 'forwards',
+    });
+  }
+
+  // Start hero reveals during the crossfade so content emerges as brand dissolves
+  await wait(200);
+  initializeRevealSystem();
+
+  await wait(BRAND_INTRO_EXIT_DURATION - 200);
+  brandIntro.classList.add('is-hidden');
+}
+
+function bootLandingExperience() {
+  prepareRevealSystem();
+
+  runBrandIntro()
+    .catch(() => {
+      if (brandIntro) {
+        brandIntro.classList.add('is-hidden');
+      }
+    })
+    .finally(() => {
+      // Ensure landing is always visible and reveal system is always initialized,
+      // even if the intro promise rejected or was skipped.
+      document.body.classList.remove('preload-intro');
+      initializeRevealSystem();
+    });
+}
+
+bootLandingExperience();
 
 // ── Smooth scrolling (desktop inertia) ──
 const smoothScrollEnabled =
