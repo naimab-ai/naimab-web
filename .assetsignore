@@ -1,0 +1,13 @@
+_worker.js
+functions/
+.git/
+.claude/
+.wrangler/
+node_modules/
+.gitignore
+.assetsignore
+wrangler.jsonc
+.dev.vars
+.dev.vars.*
+.DS_Store
+Thumbs.db
