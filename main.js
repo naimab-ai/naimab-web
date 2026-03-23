@@ -1050,6 +1050,7 @@ function bindModalForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, name }),
         });
+        const payload = await res.json().catch(() => null);
 
         const content = modal.querySelector('.modal-content');
         if (res.ok) {
@@ -1062,16 +1063,20 @@ function bindModalForm() {
             '<button onclick="closeModal()" class="btn-primary w-full py-3">' +
               'Got it' +
             '</button>' +
-          '</div>';
+            '</div>';
         } else {
           if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
-          errEl.textContent = 'Something went wrong. Please try again.';
+          errEl.textContent = payload && typeof payload.error === 'string'
+            ? payload.error
+            : 'Something went wrong. Please try again.';
           errEl.classList.add('is-visible');
+          console.error('Waitlist signup failed', { status: res.status, payload });
         }
-      } catch {
+      } catch (error) {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
         errEl.textContent = 'Network error. Please try again.';
         errEl.classList.add('is-visible');
+        console.error('Waitlist signup request failed', error);
       }
     });
   }
