@@ -8,42 +8,81 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Invalid email' }, { status: 400 });
     }
 
+    if (!env?.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+
     const firstName = name ? name.split(' ')[0] : 'there';
 
     // 1. Thank-you email to the user
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Naimab <hello@naimab.dev>',
-        to: [email],
-        subject: "You're on the Naimab waitlist",
-        html: thankYouEmail(firstName),
-      }),
+    await sendResendEmail(env, {
+      from: 'Naimab <hello@naimab.dev>',
+      to: [email],
+      subject: "You're on the Naimab waitlist",
+      html: thankYouEmail(firstName),
+    }, 'subscribe:confirmation');
+
+    // 2. Notification to owner should not block the success state for the subscriber.
+    const notificationPromise = sendResendEmail(env, {
+      from: 'Naimab Waitlist <hello@naimab.dev>',
+      to: ['naimabteam@gmail.com'],
+      subject: `New waitlist signup: ${email}`,
+      html: `<p><b>Name:</b> ${escHtml(name || '-')}</p><p><b>Email:</b> ${escHtml(email)}</p>`,
+    }, 'subscribe:notification').catch((error) => {
+      console.error('subscribe notification failed', formatError(error));
     });
 
-    // 2. Notification to owner
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Naimab Waitlist <hello@naimab.dev>',
-        to: ['naimabteam@gmail.com'],
-        subject: `New waitlist signup: ${email}`,
-        html: `<p><b>Name:</b> ${escHtml(name || '—')}</p><p><b>Email:</b> ${escHtml(email)}</p>`,
-      }),
-    });
+    if (typeof context.waitUntil === 'function') {
+      context.waitUntil(notificationPromise);
+    }
 
     return Response.json({ ok: true });
-  } catch {
-    return Response.json({ error: 'Server error' }, { status: 500 });
+  } catch (error) {
+    console.error('subscribe handler failed', formatError(error));
+    return Response.json({ error: 'Waitlist signup is temporarily unavailable. Please try again later.' }, { status: 500 });
   }
+}
+
+async function sendResendEmail(env, payload, logContext) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const rawBody = await response.text();
+  let parsedBody = null;
+
+  if (rawBody) {
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch {
+      parsedBody = null;
+    }
+  }
+
+  if (!response.ok) {
+    console.error('resend request failed', {
+      context: logContext,
+      status: response.status,
+      body: parsedBody ?? rawBody,
+    });
+    throw new Error(`Resend request failed with status ${response.status}`);
+  }
+}
+
+function formatError(error) {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return { error: String(error) };
 }
 
 function escHtml(str) {

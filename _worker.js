@@ -4,7 +4,7 @@ const JSON_HEADERS = {
 };
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname === '/api/subscribe') {
@@ -12,7 +12,7 @@ export default {
         return jsonResponse({ error: 'Method not allowed' }, 405);
       }
 
-      return handleSubscribe(request, env);
+      return handleSubscribe(request, env, ctx);
     }
 
     if (url.pathname === '/api/contact') {
@@ -27,7 +27,7 @@ export default {
   },
 };
 
-async function handleSubscribe(request, env) {
+async function handleSubscribe(request, env, ctx) {
   try {
     const body = await parseJsonBody(request);
     const name = typeof body?.name === 'string' ? body.name.trim() : '';
@@ -48,12 +48,18 @@ async function handleSubscribe(request, env) {
       html: thankYouEmail(firstName),
     }, 'subscribe:confirmation');
 
-    await sendResendEmail(env, {
+    const notificationPromise = sendResendEmail(env, {
       from: 'Naimab Waitlist <hello@naimab.dev>',
       to: ['naimabteam@gmail.com'],
       subject: `New waitlist signup: ${email}`,
       html: `<p><b>Name:</b> ${escapeHtml(name || '-')}</p><p><b>Email:</b> ${escapeHtml(email)}</p>`,
-    }, 'subscribe:notification');
+    }, 'subscribe:notification').catch((error) => {
+      console.error('subscribe notification failed', formatError(error));
+    });
+
+    if (ctx && typeof ctx.waitUntil === 'function') {
+      ctx.waitUntil(notificationPromise);
+    }
 
     return jsonResponse({ ok: true }, 200);
   } catch (error) {
