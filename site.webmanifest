@@ -1,0 +1,23 @@
+{
+  "name": "Naimab",
+  "short_name": "Naimab",
+  "description": "AI burnout prevention and energy management.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcf6ef",
+  "theme_color": "#fcf6ef",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
