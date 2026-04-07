@@ -213,11 +213,11 @@ tailwind.config = {
     <div class="max-w-[1120px] mx-auto flex flex-col items-center gap-8 lg:gap-10">
 
       <!-- Heading -->
-      <h1 class="hero-stagger hero-blur-in hero-title" data-reveal-preset="spring-up" data-reveal-distance="170" data-reveal-letters="true" style="animation-delay: 0.2s;">Predict burnout.<br><span class="gradient-text">Protect your energy.</span></h1>
+      <h1 class="hero-stagger hero-blur-in hero-title" data-reveal-preset="spring-up" data-reveal-distance="170" data-reveal-letters="true" style="animation-delay: 0.2s;">Catch burnout early.<br><span class="gradient-text">Protect your ability to work.</span></h1>
 
       <!-- Subtext -->
       <p class="hero-stagger hero-blur-in text-xl text-muted text-center max-w-[560px] leading-relaxed" data-reveal-preset="spring-up" data-reveal-distance="170" style="animation-delay: 0.35s;">
-        An AI system that analyzes behavioral and work patterns, predicts burnout risk, and provides personalized recommendations to prevent it.
+        Most AI wellness tools forget you after every session. Naimab doesn’t. It remembers your check-ins, work patterns, and stress signals over time, so it can catch burnout earlier and give guidance that fits you.
       </p>
 
       <!-- Buttons -->
@@ -264,7 +264,7 @@ tailwind.config = {
       <div class="flex flex-col gap-4 max-w-[620px]" data-animate data-reveal-preset="soft-up">
         <span class="section-label w-fit">How it works</span>
         <h2 class="section-heading text-4xl md:text-[50px]">How the AI works for you</h2>
-        <p class="text-muted text-lg leading-relaxed">A 2-minute daily check-in. An AI with memory that remembers what you've told it and learns you over time. A plan built just for you.</p>
+        <p class="text-muted text-lg leading-relaxed">A 2-minute daily check-in. An AI with memory that combines what you tell it with OS activity tracking, learns how you work, and builds your personal work pattern over time. A plan built just for you.</p>
         <div class="mt-2" data-reveal-preset="blur-left" data-reveal-distance="50">
           <button class="waitlist-btn nav-pill nav-pill-primary" type="button">
             <span class="nav-pill-label nav-pill-label-ghost">Get Free Access</span>
@@ -277,8 +277,8 @@ tailwind.config = {
       <div class="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center" data-animate data-reveal-preset="soft-up" data-reveal-stagger="120">
         <div class="flex flex-col gap-3" data-reveal-preset="soft-up">
           <span class="step-number">01</span>
-          <h3 class="step-title">AI learns you</h3>
-          <p class="step-desc">It analyzes your schedule and daily patterns to create a model of you that gets smarter over time.</p>
+          <h3 class="step-title">AI builds your baseline</h3>
+          <p class="step-desc">Using OS activity tracking, it maps your normal workflow and builds a user pattern from real behavior, not self-reporting alone.</p>
         </div>
         <div class="mockup-screen max-w-[460px] mx-auto lg:mx-0" data-reveal-preset="spring-up" data-reveal-distance="120">
           <div class="memory-graph-wrap">
@@ -292,8 +292,8 @@ tailwind.config = {
       <div class="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center" data-animate data-reveal-stagger="120">
         <div class="flex flex-col gap-3 lg:order-2" data-reveal-preset="blur-right" data-reveal-distance="70">
           <span class="step-number">02</span>
-          <h3 class="step-title">AI Forms First Hypotheses</h3>
-          <p class="step-desc">Once it has learned enough, the AI begins forming its first hypotheses about your state, patterns, and changing needs.</p>
+          <h3 class="step-title">AI flags drift early</h3>
+          <p class="step-desc">Once it knows your baseline, the AI catches deviations early and forms hypotheses about overload, stress, and rising burnout risk.</p>
         </div>
         <div class="mockup-screen max-w-[460px] mx-auto lg:mx-0 lg:order-1" data-reveal-preset="blur-left" data-reveal-distance="70">
           <div class="hyp-wrap" id="hyp-wrap">
@@ -430,7 +430,6 @@ tailwind.config = {
       <p class="text-muted text-xs">&copy; 2026 Naimab. All rights reserved.</p>
       <div class="flex gap-6 text-xs text-muted">
         <a href="/privacy" class="hover:text-dark transition-colors">Privacy Policy</a>
-        <a href="/terms" class="hover:text-dark transition-colors">Terms of Service</a>
       </div>
     </div>
   </div>
@@ -455,6 +454,12 @@ tailwind.config = {
         <input type="email" id="waitlist-email" class="modal-input" placeholder="Your email" required autocomplete="email"/>
         <p class="modal-error" id="email-error">Please enter a valid email address.</p>
       </div>
+      <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+        <label for="company-name">Company</label>
+        <input type="text" id="company-name" name="company" tabindex="-1" autocomplete="off"/>
+      </div>
+      <div id="waitlist-turnstile" hidden></div>
+      <p class="modal-error" id="waitlist-general-error"></p>
       <button type="submit" class="nav-pill nav-pill-primary w-full mt-2 py-3.5">
         <span class="nav-pill-label nav-pill-label-ghost">Reserve My Spot</span>
         <span class="nav-pill-label nav-pill-label-main">Reserve My Spot</span>

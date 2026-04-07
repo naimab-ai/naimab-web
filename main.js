@@ -991,13 +991,17 @@ const modalForm = document.getElementById('waitlist-form');
 const modalEmailInput = document.getElementById('waitlist-email');
 const modalNameInput = document.getElementById('waitlist-name');
 const emailError = document.getElementById('email-error');
+const turnstileSiteKey = document.querySelector('meta[name="turnstile-site-key"]')?.content?.trim() || '';
+let turnstileLoaderPromise = null;
+let waitlistTurnstileId = null;
 
 function openModal() {
   if (!modal) return;
   modal.classList.add('is-open');
   document.body.style.overflow = 'hidden';
   setTimeout(() => {
-    if (modalNameInput) modalNameInput.focus();
+    const currentNameInput = document.getElementById('waitlist-name');
+    if (currentNameInput) currentNameInput.focus();
   }, 350);
 }
 
@@ -1005,9 +1009,13 @@ function closeModal() {
   if (!modal) return;
   modal.classList.remove('is-open');
   document.body.style.overflow = '';
-  if (modalForm) modalForm.reset();
-  if (emailError) emailError.classList.remove('is-visible');
-  if (modalEmailInput) modalEmailInput.classList.remove('is-error');
+  const currentForm = document.getElementById('waitlist-form');
+  const currentEmailError = document.getElementById('email-error');
+  const currentEmailInput = document.getElementById('waitlist-email');
+  if (currentForm) currentForm.reset();
+  if (currentEmailError) currentEmailError.classList.remove('is-visible');
+  if (currentEmailInput) currentEmailInput.classList.remove('is-error');
+  setWaitlistGeneralError('');
   restoreModalForm();
 }
 
@@ -1016,21 +1024,78 @@ let originalModalHTML = modalContentEl ? modalContentEl.innerHTML : '';
 function restoreModalForm() {
   if (modalContentEl && originalModalHTML && !modalContentEl.querySelector('#waitlist-form')) {
     modalContentEl.innerHTML = originalModalHTML;
+    waitlistTurnstileId = null;
     bindModalForm();
   }
+}
+
+function getWaitlistGeneralError() {
+  return document.getElementById('waitlist-general-error');
+}
+
+function setWaitlistGeneralError(message) {
+  const errorEl = getWaitlistGeneralError();
+  if (!errorEl) return;
+  errorEl.textContent = message;
+  errorEl.classList.toggle('is-visible', Boolean(message));
+}
+
+function ensureTurnstileLoaded() {
+  if (!turnstileSiteKey) return Promise.resolve(null);
+  if (window.turnstile) return Promise.resolve(window.turnstile);
+  if (turnstileLoaderPromise) return turnstileLoaderPromise;
+
+  turnstileLoaderPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(window.turnstile || null);
+    script.onerror = () => reject(new Error('Failed to load verification widget'));
+    document.head.appendChild(script);
+  });
+
+  return turnstileLoaderPromise;
+}
+
+async function ensureWaitlistTurnstile() {
+  const slot = document.getElementById('waitlist-turnstile');
+  if (!slot || !turnstileSiteKey) return null;
+  if (waitlistTurnstileId !== null && window.turnstile) {
+    return waitlistTurnstileId;
+  }
+
+  const turnstile = await ensureTurnstileLoaded();
+  if (!turnstile) return null;
+
+  slot.hidden = false;
+  waitlistTurnstileId = turnstile.render(slot, {
+    sitekey: turnstileSiteKey,
+    theme: 'light',
+  });
+  return waitlistTurnstileId;
 }
 
 function bindModalForm() {
   const form = document.getElementById('waitlist-form');
   const emailInput = document.getElementById('waitlist-email');
   const errEl = document.getElementById('email-error');
+  const companyInput = document.getElementById('company-name');
+
+  if (form) {
+    void ensureWaitlistTurnstile().catch(() => {
+      setWaitlistGeneralError('Verification widget failed to load. Please refresh and try again.');
+    });
+  }
 
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = emailInput.value.trim();
       const name = document.getElementById('waitlist-name') ? document.getElementById('waitlist-name').value.trim() : '';
+      const company = companyInput ? companyInput.value.trim() : '';
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      let turnstileToken = '';
 
       if (!emailRegex.test(email)) {
         emailInput.classList.add('is-error');
@@ -1040,6 +1105,24 @@ function bindModalForm() {
 
       emailInput.classList.remove('is-error');
       errEl.classList.remove('is-visible');
+      setWaitlistGeneralError('');
+
+      if (turnstileSiteKey) {
+        try {
+          const widgetId = await ensureWaitlistTurnstile();
+          if (widgetId !== null && window.turnstile) {
+            turnstileToken = window.turnstile.getResponse(widgetId);
+          }
+        } catch {
+          setWaitlistGeneralError('Verification widget failed to load. Please refresh and try again.');
+          return;
+        }
+      }
+
+      if (turnstileSiteKey && !turnstileToken) {
+        setWaitlistGeneralError('Please complete the verification challenge.');
+        return;
+      }
 
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.6'; }
@@ -1048,7 +1131,7 @@ function bindModalForm() {
         const res = await fetch('/api/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name }),
+          body: JSON.stringify({ email, name, company, turnstileToken }),
         });
         const payload = await res.json().catch(() => null);
 
@@ -1060,22 +1143,32 @@ function bindModalForm() {
             '</div>' +
             '<h3 class="text-xl font-bold mb-2">You\'re on the list!</h3>' +
             '<p class="text-muted text-sm mb-6">Check your inbox — we just sent you a confirmation. We\'ll notify you when early access opens.</p>' +
-            '<button onclick="closeModal()" class="btn-primary w-full py-3">' +
+            '<button class="btn-primary w-full py-3" id="waitlist-success-close" type="button">' +
               'Got it' +
             '</button>' +
             '</div>';
+          const closeBtn = document.getElementById('waitlist-success-close');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', closeModal);
+          }
         } else {
           if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
           errEl.textContent = payload && typeof payload.error === 'string'
             ? payload.error
             : 'Something went wrong. Please try again.';
           errEl.classList.add('is-visible');
-          console.error('Waitlist signup failed', { status: res.status, payload });
+          if (window.turnstile && waitlistTurnstileId !== null) {
+            window.turnstile.reset(waitlistTurnstileId);
+          }
+          console.error('Waitlist signup failed', { status: res.status });
         }
       } catch (error) {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
         errEl.textContent = 'Network error. Please try again.';
         errEl.classList.add('is-visible');
+        if (window.turnstile && waitlistTurnstileId !== null) {
+          window.turnstile.reset(waitlistTurnstileId);
+        }
         console.error('Waitlist signup request failed', error);
       }
     });
@@ -1085,6 +1178,7 @@ function bindModalForm() {
     emailInput.addEventListener('input', () => {
       emailInput.classList.remove('is-error');
       if (errEl) errEl.classList.remove('is-visible');
+      setWaitlistGeneralError('');
     });
   }
 }
@@ -1208,7 +1302,7 @@ bindModalForm();
   const convergence = 0;
   let lastPulseTime = 0;
   let lastCorePulseTime = 0;
-  const phrases = ['Observing patterns\u2026', 'Connecting insights\u2026', 'Building your model\u2026', 'Understanding you\u2026'];
+  const phrases = ['Tracking real work\u2026', 'Building your baseline\u2026', 'Modeling your pattern\u2026', 'Flagging drift early\u2026'];
   let currentPhrase = -1;
 
   /* ── 3D projection helper ── */
