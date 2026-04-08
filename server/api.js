@@ -337,17 +337,26 @@ async function verifyTurnstileToken(request, env, token) {
     throw new HttpError(400, 'Verification failed. Please try again.');
   }
 
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      secret: env.TURNSTILE_SECRET_KEY,
-      response: token,
-      remoteip: getClientIp(request),
-    }),
-  });
+  let response;
+  try {
+    response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        secret: env.TURNSTILE_SECRET_KEY,
+        response: token,
+        remoteip: getClientIp(request),
+      }),
+    });
+  } catch (error) {
+    console.error('turnstile verification request failed', {
+      ...formatError(error),
+      clientIp: getClientIp(request),
+    });
+    throw new HttpError(503, 'Verification is temporarily unavailable. Please try again later.');
+  }
 
   let result = null;
   try {
@@ -356,35 +365,56 @@ async function verifyTurnstileToken(request, env, token) {
     result = null;
   }
 
-  if (!response.ok || !result?.success) {
+  if (!response.ok) {
+    console.error('turnstile verification responded with an error', {
+      status: response.status,
+      result,
+      clientIp: getClientIp(request),
+    });
+    throw new HttpError(503, 'Verification is temporarily unavailable. Please try again later.');
+  }
+
+  if (!result?.success) {
     throw new HttpError(400, 'Verification failed. Please try again.');
   }
 }
 
 function ensureResendConfig(env) {
   if (!env?.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not configured');
+    console.error('resend configuration is missing');
+    throw new HttpError(503, 'Email delivery is temporarily unavailable. Please try again later.');
   }
 }
 
 async function sendResendEmail(env, payload, logContext) {
   ensureResendConfig(env);
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  let response;
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error('resend request failed before receiving a response', {
+      context: logContext,
+      ...formatError(error),
+    });
+    throw new HttpError(503, 'Email delivery is temporarily unavailable. Please try again later.');
+  }
 
   if (!response.ok) {
+    const responseText = await response.text().catch(() => '');
     console.error('resend request failed', {
       context: logContext,
       status: response.status,
+      body: responseText.slice(0, 500),
     });
-    throw new Error(`Resend request failed with status ${response.status}`);
+    throw new HttpError(503, 'Email delivery is temporarily unavailable. Please try again later.');
   }
 }
 
@@ -419,7 +449,11 @@ function errorResponse(error) {
 
 function formatError(error) {
   if (error instanceof Error) {
-    return { message: error.message };
+    return {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause ? String(error.cause) : undefined,
+    };
   }
 
   return { error: String(error) };
