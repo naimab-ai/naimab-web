@@ -57,9 +57,7 @@ export async function handleSubscribeRequest(request, env, ctx) {
         console.error('subscribe notification failed', formatError(error));
       });
 
-      if (runtimeCtx && typeof runtimeCtx.waitUntil === 'function') {
-        runtimeCtx.waitUntil(notificationPromise);
-      }
+      scheduleBackgroundTask(runtimeCtx, notificationPromise, 'subscribe notification');
 
       return jsonResponse({ ok: true }, 200);
     },
@@ -150,6 +148,18 @@ async function handleProtectedRoute({ request, env, ctx, route, parsePayload, ex
     return await execute({ request, env, ctx, payload });
   } catch (error) {
     return errorResponse(error);
+  }
+}
+
+function scheduleBackgroundTask(ctx, taskPromise, label) {
+  if (!ctx || typeof ctx.waitUntil !== 'function') {
+    return;
+  }
+
+  try {
+    ctx.waitUntil(taskPromise);
+  } catch (error) {
+    console.error(`${label} could not be scheduled`, formatError(error));
   }
 }
 

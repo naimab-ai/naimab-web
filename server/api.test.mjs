@@ -61,3 +61,33 @@ test('subscribe returns 503 when resend rejects the request', async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test('subscribe still succeeds when waitUntil scheduling throws', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    return new Response(JSON.stringify({ id: 'email_123' }), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
+  };
+
+  try {
+    const response = await handleSubscribeRequest(
+      createSubscribeRequest(),
+      { RESEND_API_KEY: 'test-key' },
+      {
+        waitUntil() {
+          throw new Error('waitUntil boom');
+        },
+      },
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(payload, { ok: true });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

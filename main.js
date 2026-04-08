@@ -3,12 +3,121 @@
    ══════════════════════════════════════════════ */
 
 // ── Entrance animations (perfectly.so-inspired) ──
-const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const reduceMotionQuery = typeof window.matchMedia === 'function'
+  ? window.matchMedia('(prefers-reduced-motion: reduce)')
+  : { matches: false };
 
 function wait(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
   });
+}
+
+const ANIMATION_META_KEYS = new Set(['offset', 'easing', 'composite']);
+
+function applyInlineFrameStyles(element, frame) {
+  if (!element || !frame) return;
+
+  Object.entries(frame).forEach(([prop, value]) => {
+    if (ANIMATION_META_KEYS.has(prop)) return;
+    element.style[prop] = String(value);
+  });
+}
+
+function animateElementWithFallback(element, keyframes, options = {}, onFinish) {
+  if (!element || !Array.isArray(keyframes) || keyframes.length === 0) {
+    if (typeof onFinish === 'function') onFinish();
+    return null;
+  }
+
+  let isFinished = false;
+  const finish = () => {
+    if (isFinished) return;
+    isFinished = true;
+    element.style.transition = '';
+    if (typeof onFinish === 'function') onFinish();
+  };
+
+  if (typeof element.animate === 'function') {
+    const animation = element.animate(keyframes, options);
+    if (animation?.finished && typeof animation.finished.finally === 'function') {
+      animation.finished.catch(() => {}).finally(finish);
+    } else {
+      const totalDuration =
+        Math.max(0, Number(options.delay) || 0) +
+        Math.max(0, Number(options.duration) || 0);
+      window.setTimeout(finish, totalDuration);
+    }
+    return animation;
+  }
+
+  const firstFrame = keyframes[0];
+  const finalFrame = keyframes[keyframes.length - 1];
+  if (reduceMotionQuery.matches) {
+    applyInlineFrameStyles(element, finalFrame);
+    finish();
+    return { cancel: finish };
+  }
+
+  const duration = Math.max(0, Number(options.duration) || 0);
+  const delay = Math.max(0, Number(options.delay) || 0);
+  const easing = options.easing || 'ease';
+  const transitionProps = Array.from(new Set(
+    keyframes.flatMap((frame) => Object.keys(frame || {}).filter((prop) => !ANIMATION_META_KEYS.has(prop))),
+  ));
+
+  applyInlineFrameStyles(element, firstFrame);
+  void element.offsetWidth;
+
+  const runTransition = () => {
+    if (transitionProps.length > 0) {
+      element.style.transition = transitionProps
+        .map((prop) => `${prop} ${duration}ms ${easing}`)
+        .join(', ');
+    }
+    applyInlineFrameStyles(element, finalFrame);
+    window.setTimeout(finish, duration);
+  };
+
+  if (delay > 0) {
+    window.setTimeout(runTransition, delay);
+  } else {
+    window.requestAnimationFrame(runTransition);
+  }
+
+  return { cancel: finish };
+}
+
+function createIntersectionObserver(callback, options) {
+  if (typeof IntersectionObserver === 'function') {
+    return new IntersectionObserver(callback, options);
+  }
+
+  return {
+    observe(target) {
+      callback([{ isIntersecting: true, target }]);
+    },
+    unobserve() {},
+    disconnect() {},
+  };
+}
+
+function createResizeObserver(callback) {
+  if (typeof ResizeObserver === 'function') {
+    return new ResizeObserver(callback);
+  }
+
+  return {
+    observe() {
+      window.addEventListener('resize', callback);
+    },
+    unobserve() {
+      window.removeEventListener('resize', callback);
+    },
+    disconnect() {
+      window.removeEventListener('resize', callback);
+    },
+  };
 }
 
 const REVEAL_PRESETS = {
@@ -332,7 +441,7 @@ function animateRevealPieces(target, delay = 0) {
       return;
     }
 
-    piece.animate([
+    animateElementWithFallback(piece, [
       { opacity: 0.001, filter: 'blur(10px)', transform: 'translateY(10px)' },
       { opacity: 1, filter: 'blur(0px)', transform: 'translateY(0)' },
     ], {
@@ -340,7 +449,7 @@ function animateRevealPieces(target, delay = 0) {
       delay: delay + initialDelay + index * pieceDelay,
       easing: 'cubic-bezier(0.56, 0.22, 0.05, 0.99)',
       fill: 'forwards',
-    }).finished.finally(() => {
+    }, () => {
       resetRevealPieceStyles(piece);
     });
   });
@@ -382,12 +491,12 @@ function animateRevealTarget(target, delay = 0) {
   const distance = Number(target.dataset.revealDistance || getRevealDistance(target, presetName));
   const resolvedDelay = delay || getRevealNumber(target, 'revealDelay') || 0;
 
-  target.animate(preset.keyframes(distance), {
+  animateElementWithFallback(target, preset.keyframes(distance), {
     duration: preset.duration,
     delay: resolvedDelay,
     easing: preset.easing,
     fill: 'forwards',
-  }).finished.finally(() => {
+  }, () => {
     resetRevealStyles(target);
     target.dataset.revealDone = 'true';
   });
@@ -501,7 +610,7 @@ function initializeRevealSystem() {
   const revealGroups = preparedRevealGroups;
 
   if (!reduceMotionQuery.matches) {
-    const revealObserver = new IntersectionObserver((entries) => {
+    const revealObserver = createIntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         animateRevealGroup(entry.target);
@@ -573,7 +682,7 @@ async function playBrandIntroReveal() {
 
   // Animate panel container rising from below
   if (panel) {
-    panelRiseAnimation = panel.animate([
+    panelRiseAnimation = animateElementWithFallback(panel, [
       { transform: 'translateY(160px)', opacity: 0.001 },
       { transform: 'translateY(0)', opacity: 1 },
     ], {
@@ -601,6 +710,10 @@ async function runBrandIntro() {
 
   if (reduceMotionQuery.matches) {
     renderBrandIntroInstant();
+    brandIntro.classList.add('is-caption-visible');
+    document.body.classList.remove('preload-intro');
+    initializeRevealSystem();
+    await wait(550);
     brandIntro.classList.add('is-hidden');
     return;
   }
@@ -625,7 +738,7 @@ async function runBrandIntro() {
   // Slide panel off-screen
   const panel = document.querySelector('.brand-intro-panel');
   if (panel) {
-    panel.animate([
+    animateElementWithFallback(panel, [
       { transform: 'translateY(0)', opacity: 1 },
       { transform: 'translateY(-400px)', opacity: 0 },
     ], {
@@ -920,7 +1033,7 @@ mobileBackdrop.addEventListener('click', closeMobileMenu);
 
 // ── Counter animation ──
 const counters = document.querySelectorAll('[data-count]');
-const counterObserver = new IntersectionObserver((entries) => {
+const counterObserver = createIntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const el = entry.target;
@@ -1696,8 +1809,8 @@ bindModalForm();
   }
 
   resize();
-  new ResizeObserver(resize).observe(wrap);
-  new IntersectionObserver(([entry]) => {
+  createResizeObserver(resize).observe(wrap);
+  createIntersectionObserver(([entry]) => {
     entry.isIntersecting ? start() : stop();
   }, { threshold: 0.1 }).observe(wrap);
 })();
@@ -1865,7 +1978,7 @@ bindModalForm();
     if (confInterval) { clearInterval(confInterval); confInterval = 0; }
   }
 
-  new IntersectionObserver(([entry]) => {
+  createIntersectionObserver(([entry]) => {
     entry.isIntersecting ? start() : stop();
   }, { threshold: 0.15 }).observe(wrap);
 })();
@@ -2053,7 +2166,7 @@ bindModalForm();
     tids = [];
   }
 
-  new IntersectionObserver(([entry]) => {
+  createIntersectionObserver(([entry]) => {
     entry.isIntersecting ? start() : stop();
   }, { threshold: 0.15 }).observe(wrap);
 })();
