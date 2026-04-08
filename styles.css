@@ -916,6 +916,38 @@ body.preload-intro #site-shell {
   margin-top: 0.35rem; display: none;
 }
 .modal-error.is-visible { display: block; }
+.modal-support {
+  margin-top: -0.1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(43, 24, 10, 0.08);
+  background: rgba(43, 24, 10, 0.04);
+}
+.modal-support-copy {
+  margin: 0 0 0.65rem;
+  color: rgba(43, 24, 10, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.modal-support-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  background: var(--color-dark);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.modal-support-link:hover,
+.modal-support-link:focus-visible {
+  background: var(--color-dark-hover);
+  transform: translateY(-1px);
+}
 
 /* ── Dashboard image ── */
 .dashboard-wrap {

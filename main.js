@@ -649,6 +649,38 @@ function renderBrandIntroInstant() {
   });
 }
 
+async function playBrandIntroMinimalReveal() {
+  if (!brandIntroLive) return;
+  brandIntroLive.textContent = '';
+
+  const panel = document.querySelector('.brand-intro-panel');
+  if (panel) {
+    panel.style.transform = 'none';
+    panel.style.opacity = '1';
+  }
+
+  const letters = Array.from(BRAND_INTRO_TEXT).map((char) => {
+    const letter = createBrandIntroLetter(char);
+    letter.style.opacity = '0.001';
+    letter.style.transform = 'none';
+    letter.style.filter = 'none';
+    brandIntroLive.appendChild(letter);
+    return letter;
+  });
+
+  await waitForBrandIntroFonts();
+  await wait(120);
+
+  for (let i = 0; i < letters.length; i++) {
+    const letter = letters[i];
+    letter.style.transition = 'opacity 180ms ease';
+    requestAnimationFrame(() => {
+      letter.style.opacity = '1';
+    });
+    if (i < letters.length - 1) await wait(55);
+  }
+}
+
 async function waitForBrandIntroFonts() {
   if (!document.fonts?.load) return;
 
@@ -709,12 +741,16 @@ async function runBrandIntro() {
   if (!brandIntro || !brandIntroLive) return;
 
   if (reduceMotionQuery.matches) {
-    renderBrandIntroInstant();
+    await playBrandIntroMinimalReveal();
+    brandIntro.style.transition = 'opacity 360ms ease';
     brandIntro.classList.add('is-caption-visible');
     document.body.classList.remove('preload-intro');
     initializeRevealSystem();
-    await wait(550);
+    await wait(700);
+    brandIntro.classList.add('is-exiting');
+    await wait(360);
     brandIntro.classList.add('is-hidden');
+    brandIntro.style.transition = '';
     return;
   }
 
@@ -1146,11 +1182,57 @@ function getWaitlistGeneralError() {
   return document.getElementById('waitlist-general-error');
 }
 
+function getWaitlistSupport() {
+  return document.getElementById('waitlist-support');
+}
+
+function hideWaitlistSupportFallback() {
+  const supportEl = getWaitlistSupport();
+  if (!supportEl) return;
+  supportEl.hidden = true;
+}
+
+function buildWaitlistSupportMailto(name, email) {
+  const params = new URLSearchParams({
+    subject: 'Early access request',
+    body: [
+      `Name: ${name || '-'}`,
+      `Email: ${email || '-'}`,
+      '',
+      'Hi Naimab team,',
+      '',
+      'I could not join the early access waitlist from the website, so I am sending my request by email.',
+    ].join('\n'),
+  });
+
+  return `mailto:hello@naimab.com?${params.toString()}`;
+}
+
+function showWaitlistSupportFallback(name, email) {
+  const supportEl = getWaitlistSupport();
+  const supportLink = document.getElementById('waitlist-support-link');
+  if (!supportEl || !supportLink) return;
+
+  supportLink.href = buildWaitlistSupportMailto(name, email);
+  supportEl.hidden = false;
+}
+
 function setWaitlistGeneralError(message) {
   const errorEl = getWaitlistGeneralError();
   if (!errorEl) return;
+  hideWaitlistSupportFallback();
   errorEl.textContent = message;
   errorEl.classList.toggle('is-visible', Boolean(message));
+}
+
+function isWaitlistEmailDeliveryUnavailable(payload) {
+  const errorMessage = payload && typeof payload.error === 'string' ? payload.error : '';
+  return payload?.code === 'EMAIL_DELIVERY_UNAVAILABLE' ||
+    errorMessage.includes('Email delivery is temporarily unavailable');
+}
+
+function isWaitlistServerSideFailure(payload, response) {
+  return response.status >= 500 || payload?.code === 'VERIFICATION_UNAVAILABLE';
 }
 
 function ensureTurnstileLoaded() {
@@ -1210,6 +1292,8 @@ function bindModalForm() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       let turnstileToken = '';
 
+      setWaitlistGeneralError('');
+
       if (!emailRegex.test(email)) {
         emailInput.classList.add('is-error');
         errEl.classList.add('is-visible');
@@ -1218,7 +1302,6 @@ function bindModalForm() {
 
       emailInput.classList.remove('is-error');
       errEl.classList.remove('is-visible');
-      setWaitlistGeneralError('');
 
       if (turnstileSiteKey) {
         try {
@@ -1266,10 +1349,21 @@ function bindModalForm() {
           }
         } else {
           if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
-          errEl.textContent = payload && typeof payload.error === 'string'
+          const errorMessage = payload && typeof payload.error === 'string'
             ? payload.error
             : 'Something went wrong. Please try again.';
-          errEl.classList.add('is-visible');
+
+          if (isWaitlistEmailDeliveryUnavailable(payload)) {
+            errEl.classList.remove('is-visible');
+            setWaitlistGeneralError(errorMessage);
+            showWaitlistSupportFallback(name, email);
+          } else if (isWaitlistServerSideFailure(payload, res)) {
+            errEl.classList.remove('is-visible');
+            setWaitlistGeneralError(errorMessage);
+          } else {
+            errEl.textContent = errorMessage;
+            errEl.classList.add('is-visible');
+          }
           if (window.turnstile && waitlistTurnstileId !== null) {
             window.turnstile.reset(waitlistTurnstileId);
           }
@@ -1277,8 +1371,8 @@ function bindModalForm() {
         }
       } catch (error) {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
-        errEl.textContent = 'Network error. Please try again.';
-        errEl.classList.add('is-visible');
+        errEl.classList.remove('is-visible');
+        setWaitlistGeneralError('Network error. Please try again.');
         if (window.turnstile && waitlistTurnstileId !== null) {
           window.turnstile.reset(waitlistTurnstileId);
         }

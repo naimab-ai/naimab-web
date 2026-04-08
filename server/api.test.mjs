@@ -27,6 +27,7 @@ test('subscribe returns 503 when email delivery is not configured', async () => 
   assert.equal(response.status, 503);
   assert.deepEqual(payload, {
     error: 'Email delivery is temporarily unavailable. Please try again later.',
+    code: 'EMAIL_DELIVERY_UNAVAILABLE',
   });
 });
 
@@ -56,6 +57,7 @@ test('subscribe returns 503 when resend rejects the request', async () => {
     assert.equal(response.status, 503);
     assert.deepEqual(payload, {
       error: 'Email delivery is temporarily unavailable. Please try again later.',
+      code: 'EMAIL_DELIVERY_UNAVAILABLE',
     });
   } finally {
     globalThis.fetch = originalFetch;

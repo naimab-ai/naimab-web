@@ -365,7 +365,12 @@ async function verifyTurnstileToken(request, env, token) {
       ...formatError(error),
       clientIp: getClientIp(request),
     });
-    throw new HttpError(503, 'Verification is temporarily unavailable. Please try again later.');
+    throw new HttpError(
+      503,
+      'Verification is temporarily unavailable. Please try again later.',
+      {},
+      'VERIFICATION_UNAVAILABLE',
+    );
   }
 
   let result = null;
@@ -381,7 +386,12 @@ async function verifyTurnstileToken(request, env, token) {
       result,
       clientIp: getClientIp(request),
     });
-    throw new HttpError(503, 'Verification is temporarily unavailable. Please try again later.');
+    throw new HttpError(
+      503,
+      'Verification is temporarily unavailable. Please try again later.',
+      {},
+      'VERIFICATION_UNAVAILABLE',
+    );
   }
 
   if (!result?.success) {
@@ -392,7 +402,12 @@ async function verifyTurnstileToken(request, env, token) {
 function ensureResendConfig(env) {
   if (!env?.RESEND_API_KEY) {
     console.error('resend configuration is missing');
-    throw new HttpError(503, 'Email delivery is temporarily unavailable. Please try again later.');
+    throw new HttpError(
+      503,
+      'Email delivery is temporarily unavailable. Please try again later.',
+      {},
+      'EMAIL_DELIVERY_UNAVAILABLE',
+    );
   }
 }
 
@@ -414,7 +429,12 @@ async function sendResendEmail(env, payload, logContext) {
       context: logContext,
       ...formatError(error),
     });
-    throw new HttpError(503, 'Email delivery is temporarily unavailable. Please try again later.');
+    throw new HttpError(
+      503,
+      'Email delivery is temporarily unavailable. Please try again later.',
+      {},
+      'EMAIL_DELIVERY_UNAVAILABLE',
+    );
   }
 
   if (!response.ok) {
@@ -424,7 +444,12 @@ async function sendResendEmail(env, payload, logContext) {
       status: response.status,
       body: responseText.slice(0, 500),
     });
-    throw new HttpError(503, 'Email delivery is temporarily unavailable. Please try again later.');
+    throw new HttpError(
+      503,
+      'Email delivery is temporarily unavailable. Please try again later.',
+      {},
+      'EMAIL_DELIVERY_UNAVAILABLE',
+    );
   }
 }
 
@@ -447,7 +472,11 @@ function jsonResponse(body, status = 200, extraHeaders = {}) {
 
 function errorResponse(error) {
   if (error instanceof HttpError) {
-    return jsonResponse({ error: error.message }, error.status, error.headers);
+    const body = { error: error.message };
+    if (error.code) {
+      body.code = error.code;
+    }
+    return jsonResponse(body, error.status, error.headers);
   }
 
   console.error('api request failed', formatError(error));
@@ -502,10 +531,11 @@ function applySecurityHeaders(headers, isHtml) {
 }
 
 class HttpError extends Error {
-  constructor(status, message, headers = {}) {
+  constructor(status, message, headers = {}, code = '') {
     super(message);
     this.status = status;
     this.headers = headers;
+    this.code = code;
   }
 }
 
