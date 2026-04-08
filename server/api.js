@@ -7,6 +7,7 @@ const MAX_JSON_BYTES = 8 * 1024;
 const MAX_NAME_LENGTH = 120;
 const MAX_EMAIL_LENGTH = 320;
 const MAX_MESSAGE_LENGTH = 4_000;
+const DEFAULT_RESEND_FROM_EMAIL = 'noreply@naimab.dev';
 const RATE_LIMIT_RULES = {
   subscribe: { max: 5, windowMs: 10 * 60 * 1000 },
   contact: { max: 3, windowMs: 10 * 60 * 1000 },
@@ -36,7 +37,7 @@ export async function handleSubscribeRequest(request, env, ctx) {
       await sendResendEmail(
         runtimeEnv,
         {
-          from: 'Naimab <hello@naimab.com>',
+          from: formatResendFrom('Naimab', runtimeEnv),
           to: [email],
           subject: "You're on the Naimab waitlist",
           html: thankYouEmail(firstName),
@@ -47,7 +48,7 @@ export async function handleSubscribeRequest(request, env, ctx) {
       const notificationPromise = sendResendEmail(
         runtimeEnv,
         {
-          from: 'Naimab Waitlist <hello@naimab.com>',
+          from: formatResendFrom('Naimab Waitlist', runtimeEnv),
           to: ['naimabteam@gmail.com'],
           subject: 'New waitlist signup',
           html: `<p><b>Name:</b> ${escapeHtml(name || '-')}</p><p><b>Email:</b> ${escapeHtml(email)}</p>`,
@@ -78,7 +79,7 @@ export async function handleContactRequest(request, env, ctx) {
       await sendResendEmail(
         runtimeEnv,
         {
-          from: 'Naimab Contact <hello@naimab.com>',
+          from: formatResendFrom('Naimab Contact', runtimeEnv),
           to: ['naimabteam@gmail.com'],
           reply_to: email,
           subject: 'New contact message',
@@ -95,7 +96,7 @@ export async function handleContactRequest(request, env, ctx) {
       await sendResendEmail(
         runtimeEnv,
         {
-          from: 'Naimab <hello@naimab.com>',
+          from: formatResendFrom('Naimab', runtimeEnv),
           to: [email],
           subject: 'We got your message',
           html: contactConfirmEmail(firstName, message),
@@ -455,6 +456,17 @@ async function sendResendEmail(env, payload, logContext) {
 
 function getFirstName(name) {
   return (name ? name.split(/\s+/)[0] : 'there').slice(0, 40) || 'there';
+}
+
+function formatResendFrom(label, env) {
+  const fromEmail = normalizeResendFromEmail(env?.RESEND_FROM_EMAIL);
+  return `${label} <${fromEmail}>`;
+}
+
+function normalizeResendFromEmail(value) {
+  return typeof value === 'string' && value.trim()
+    ? value.trim()
+    : DEFAULT_RESEND_FROM_EMAIL;
 }
 
 function jsonResponse(body, status = 200, extraHeaders = {}) {

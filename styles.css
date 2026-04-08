@@ -832,13 +832,6 @@ body.preload-intro #site-shell {
     transition: none;
   }
 
-  .brand-intro,
-  .brand-intro-panel,
-  .brand-intro-caption,
-  .brand-intro-letter {
-    transition: none;
-  }
-
   .marquee-track {
     animation: none;
   }

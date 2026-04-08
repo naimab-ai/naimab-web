@@ -638,49 +638,6 @@ function createBrandIntroLetter(char) {
   return letter;
 }
 
-function renderBrandIntroInstant() {
-  if (!brandIntroLive) return;
-  brandIntroLive.textContent = '';
-
-  Array.from(BRAND_INTRO_TEXT).forEach((char) => {
-    const letter = createBrandIntroLetter(char);
-    letter.classList.add('is-visible');
-    brandIntroLive.appendChild(letter);
-  });
-}
-
-async function playBrandIntroMinimalReveal() {
-  if (!brandIntroLive) return;
-  brandIntroLive.textContent = '';
-
-  const panel = document.querySelector('.brand-intro-panel');
-  if (panel) {
-    panel.style.transform = 'none';
-    panel.style.opacity = '1';
-  }
-
-  const letters = Array.from(BRAND_INTRO_TEXT).map((char) => {
-    const letter = createBrandIntroLetter(char);
-    letter.style.opacity = '0.001';
-    letter.style.transform = 'none';
-    letter.style.filter = 'none';
-    brandIntroLive.appendChild(letter);
-    return letter;
-  });
-
-  await waitForBrandIntroFonts();
-  await wait(120);
-
-  for (let i = 0; i < letters.length; i++) {
-    const letter = letters[i];
-    letter.style.transition = 'opacity 180ms ease';
-    requestAnimationFrame(() => {
-      letter.style.opacity = '1';
-    });
-    if (i < letters.length - 1) await wait(55);
-  }
-}
-
 async function waitForBrandIntroFonts() {
   if (!document.fonts?.load) return;
 
@@ -739,20 +696,6 @@ async function playBrandIntroReveal() {
 
 async function runBrandIntro() {
   if (!brandIntro || !brandIntroLive) return;
-
-  if (reduceMotionQuery.matches) {
-    await playBrandIntroMinimalReveal();
-    brandIntro.style.transition = 'opacity 360ms ease';
-    brandIntro.classList.add('is-caption-visible');
-    document.body.classList.remove('preload-intro');
-    initializeRevealSystem();
-    await wait(700);
-    brandIntro.classList.add('is-exiting');
-    await wait(360);
-    brandIntro.classList.add('is-hidden');
-    brandIntro.style.transition = '';
-    return;
-  }
 
   await waitForBrandIntroFonts();
   await wait(80);
