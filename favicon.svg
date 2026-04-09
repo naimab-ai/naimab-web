@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-labelledby="title">
   <title>Naimab favicon</title>
-  <rect width="64" height="64" rx="12" fill="#fcf6ef"/>
-  <path d="M16 12h8v40h-8z" fill="#161616"/>
-  <path d="M24 12h10l14 27V12h8v40H46L24 25v27h-8z" fill="#161616"/>
+  <!-- Background rounded square -->
+  <rect width="32" height="32" rx="6" fill="#fcf6ef"/>
+  <!-- Left vertical bar: 5px wide, crispEdges for pixel-perfect alignment -->
+  <rect x="4"  y="3" width="5" height="26" fill="#2b180a" shape-rendering="crispEdges"/>
+  <!-- Right vertical bar: 5px wide -->
+  <rect x="23" y="3" width="5" height="26" fill="#2b180a" shape-rendering="crispEdges"/>
+  <!-- Diagonal stroke of N: parallelogram from top-of-left-bar to bottom-of-right-bar.
+       1px overlap into each bar to prevent sub-pixel gaps at joints.
+       Perpendicular width ≈ 6px — matches bar weight. -->
+  <polygon points="8,3 15,3 24,29 17,29" fill="#2b180a"/>
 </svg>
