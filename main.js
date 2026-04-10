@@ -40,7 +40,7 @@ function animateElementWithFallback(element, keyframes, options = {}, onFinish) 
 
   if (typeof element.animate === 'function') {
     const animation = element.animate(keyframes, options);
-    if (animation?.finished && typeof animation.finished.finally === 'function') {
+    if (animation && animation.finished && typeof animation.finished.finally === 'function') {
       animation.finished.catch(() => {}).finally(finish);
     } else {
       const totalDuration =
@@ -63,7 +63,14 @@ function animateElementWithFallback(element, keyframes, options = {}, onFinish) 
   const delay = Math.max(0, Number(options.delay) || 0);
   const easing = options.easing || 'ease';
   const transitionProps = Array.from(new Set(
-    keyframes.flatMap((frame) => Object.keys(frame || {}).filter((prop) => !ANIMATION_META_KEYS.has(prop))),
+    keyframes.reduce((props, frame) => {
+      Object.keys(frame || {}).forEach((prop) => {
+        if (!ANIMATION_META_KEYS.has(prop)) {
+          props.push(prop);
+        }
+      });
+      return props;
+    }, []),
   ));
 
   applyInlineFrameStyles(element, firstFrame);
@@ -255,9 +262,12 @@ const DEFAULT_REVEAL_DISTANCES = {
 };
 
 function getRevealConfigValue(target, key) {
-  const value = target?.dataset?.[key];
+  const value = target && target.dataset ? target.dataset[key] : null;
   if (value) return value;
-  return target?.parentElement?.dataset?.[key] || null;
+  if (target && target.parentElement && target.parentElement.dataset) {
+    return target.parentElement.dataset[key] || null;
+  }
+  return null;
 }
 
 function getRevealNumber(target, key) {
@@ -365,7 +375,7 @@ function buildRevealLetters(target) {
     if (node.nodeType === Node.TEXT_NODE) {
       if (!node.textContent) return;
       const parentElement = node.parentElement;
-      const gradient = parentElement?.classList.contains('gradient-text') || false;
+      const gradient = Boolean(parentElement && parentElement.classList.contains('gradient-text'));
       node.parentNode.replaceChild(createLetterRevealFragment(node.textContent, { gradient }), node);
       return;
     }
@@ -639,7 +649,7 @@ function createBrandIntroLetter(char) {
 }
 
 async function waitForBrandIntroFonts() {
-  if (!document.fonts?.load) return;
+  if (!document.fonts || typeof document.fonts.load !== 'function') return;
 
   try {
     await Promise.race([
@@ -649,7 +659,7 @@ async function waitForBrandIntroFonts() {
       ]),
       wait(280),
     ]);
-  } catch {
+  } catch (error) {
     // Fall back to the already-rendered font stack if remote fonts are slow.
   }
 }
@@ -840,7 +850,8 @@ function getAnchorScrollTarget(anchor) {
   const target = document.querySelector(href);
   if (!target) return null;
 
-  const headerOffset = (document.getElementById('main-header')?.offsetHeight || 0) + 20;
+  const header = document.getElementById('main-header');
+  const headerOffset = ((header && header.offsetHeight) || 0) + 20;
   return target.getBoundingClientRect().top + window.scrollY - headerOffset;
 }
 
@@ -1083,7 +1094,10 @@ const modalForm = document.getElementById('waitlist-form');
 const modalEmailInput = document.getElementById('waitlist-email');
 const modalNameInput = document.getElementById('waitlist-name');
 const emailError = document.getElementById('email-error');
-const turnstileSiteKey = document.querySelector('meta[name="turnstile-site-key"]')?.content?.trim() || '';
+const turnstileMeta = document.querySelector('meta[name="turnstile-site-key"]');
+const turnstileSiteKey = turnstileMeta && typeof turnstileMeta.content === 'string'
+  ? turnstileMeta.content.trim()
+  : '';
 let turnstileLoaderPromise = null;
 let waitlistTurnstileId = null;
 
@@ -1170,12 +1184,12 @@ function setWaitlistGeneralError(message) {
 
 function isWaitlistEmailDeliveryUnavailable(payload) {
   const errorMessage = payload && typeof payload.error === 'string' ? payload.error : '';
-  return payload?.code === 'EMAIL_DELIVERY_UNAVAILABLE' ||
+  return (payload && payload.code === 'EMAIL_DELIVERY_UNAVAILABLE') ||
     errorMessage.includes('Email delivery is temporarily unavailable');
 }
 
 function isWaitlistServerSideFailure(payload, response) {
-  return response.status >= 500 || payload?.code === 'VERIFICATION_UNAVAILABLE';
+  return response.status >= 500 || Boolean(payload && payload.code === 'VERIFICATION_UNAVAILABLE');
 }
 
 function ensureTurnstileLoaded() {
@@ -1252,7 +1266,7 @@ function bindModalForm() {
           if (widgetId !== null && window.turnstile) {
             turnstileToken = window.turnstile.getResponse(widgetId);
           }
-        } catch {
+        } catch (error) {
           setWaitlistGeneralError('Verification widget failed to load. Please refresh and try again.');
           return;
         }
@@ -1360,7 +1374,14 @@ bindModalForm();
   const statusEl = document.getElementById('memory-graph-status');
   if (!wrap || !canvas) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
+  if (!ctx) {
+    if (statusEl) {
+      statusEl.textContent = 'AI memory graph';
+      statusEl.style.opacity = '0.5';
+    }
+    return;
+  }
   const dpr = window.devicePixelRatio || 1;
   let W, H, cx, cy, maxR;
   let elapsed = 0, lastTs = 0, rafId = 0, isRunning = false;
