@@ -1,18 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-labelledby="title">
   <title>Naimab</title>
-  <!-- Dark warm background, rx=7 for premium rounded-square look -->
-  <rect width="32" height="32" rx="7" fill="#2b180a"/>
-  <!-- Left stem: 5×22px, pixel-locked -->
-  <rect x="5" y="5" width="5" height="22" fill="#fcf6ef" shape-rendering="crispEdges"/>
-  <!-- Right stem: 5×22px, pixel-locked -->
-  <rect x="22" y="5" width="5" height="22" fill="#fcf6ef" shape-rendering="crispEdges"/>
   <!--
-    Diagonal of N: parallelogram from top-of-left-stem to bottom-of-right-stem.
-    Horizontal span = 5px  →  perpendicular width = 5 × (22/24.6) ≈ 4.5px
-    (~10% lighter than 5px stems — standard optical correction for diagonal strokes).
-    2px overlap into each stem prevents sub-pixel gaps at joints.
-      top  : x=[8,13]  left-stem=[5,10]  → 2px overlap + 3px extension
-      bottom: x=[19,24] right-stem=[22,27] → 3px approach + 2px overlap
+    The old favicon was drawn on a 32px grid, then crushed down to 16px in tabs.
+    That pushed the stems and diagonal onto half-pixels, which is why the "N"
+    looked muddy. This version is authored directly on a 16px grid.
   -->
-  <polygon points="8,5 13,5 24,27 19,27" fill="#fcf6ef"/>
+  <rect width="16" height="16" rx="3" fill="#2b180a"/>
+  <g fill="#fcf6ef" shape-rendering="crispEdges">
+    <rect x="2" y="2" width="3" height="12"/>
+    <rect x="11" y="2" width="3" height="12"/>
+    <rect x="4" y="2" width="3" height="2"/>
+    <rect x="5" y="4" width="3" height="2"/>
+    <rect x="6" y="6" width="3" height="2"/>
+    <rect x="7" y="8" width="3" height="2"/>
+    <rect x="8" y="10" width="3" height="2"/>
+    <rect x="9" y="12" width="3" height="2"/>
+  </g>
 </svg>
