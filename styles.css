@@ -81,7 +81,10 @@
 
 /* ── Base ── */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
 html.is-inertia-scroll { scroll-behavior: auto; }
 body {
   font-family: var(--font-body);
@@ -90,6 +93,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 body.preload-intro {
   overflow: hidden !important;
@@ -253,7 +257,7 @@ body.preload-intro #site-shell {
   position: relative;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 64px;
+  padding: 16px 64px;
   height: 72px;
   display: flex;
   align-items: center;
@@ -388,7 +392,7 @@ body.preload-intro #site-shell {
 
   .site-nav-inner {
     height: 64px;
-    padding: 24px 16px;
+    padding: 10px 16px;
     justify-content: space-between;
     gap: 16px;
   }
@@ -402,6 +406,149 @@ body.preload-intro #site-shell {
 
   .site-wordmark {
     font-size: 28px;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .site-nav-inner {
+    padding: 10px 16px;
+  }
+
+  .site-nav-burger {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hero-title {
+    font-size: 40px;
+    line-height: 1.02;
+    letter-spacing: -0.05em;
+  }
+
+  .section-heading {
+    font-size: 32px !important;
+    line-height: 1.05;
+    letter-spacing: -0.055em;
+  }
+
+  .step-number {
+    font-size: 40px;
+  }
+
+  .step-title {
+    font-size: 30px;
+    line-height: 1.04;
+  }
+
+  .step-desc {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .marquee-item {
+    gap: 1rem;
+    padding: 0 1.4rem;
+    letter-spacing: 0.14em;
+  }
+
+  .mockup-screen {
+    border-radius: 18px;
+  }
+
+  .compare-card {
+    padding: 20px;
+  }
+
+  .compare-card .compare-title {
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+
+  .faq-question-btn {
+    gap: 12px;
+    font-size: 16px;
+    line-height: 1.45;
+    align-items: flex-start;
+  }
+
+  .faq-answer p {
+    font-size: 14px;
+  }
+
+  .modal-overlay {
+    padding: 0.875rem;
+  }
+
+  .modal-content {
+    padding: 1.5rem 1.125rem 1.125rem;
+    border-radius: 22px;
+  }
+
+  .modal-support-link {
+    width: 100%;
+  }
+
+  .memory-graph-wrap {
+    height: 320px;
+  }
+
+  .memory-graph-status,
+  .hyp-status,
+  .concl-status,
+  .concl-line,
+  .faq-question-btn,
+  .step-title,
+  .section-heading {
+    overflow-wrap: anywhere;
+  }
+
+  .memory-graph-status {
+    padding: 0 16px;
+    line-height: 1.4;
+  }
+
+  .hyp-wrap {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .hyp-signals {
+    gap: 6px;
+  }
+
+  .hyp-signal {
+    padding: 10px 6px;
+  }
+
+  .hyp-signal-value {
+    font-size: 16px;
+  }
+
+  .hyp-footer {
+    gap: 8px;
+  }
+
+  .hyp-conf-val {
+    min-width: 80px;
+  }
+
+  .concl-wrap {
+    min-height: 0;
+    padding: 18px 16px;
+  }
+
+  .concl-header {
+    margin-bottom: 16px;
+  }
+
+  .concl-line.is-highlight,
+  .concl-line.is-predict {
+    line-height: 1.45;
+  }
+
+  .concl-line .concl-risk-badge {
+    margin-left: 0;
+    margin-top: 6px;
   }
 }
 
