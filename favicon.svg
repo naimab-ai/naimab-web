@@ -1,13 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-labelledby="title">
-  <title>Naimab favicon</title>
-  <!-- Background rounded square -->
-  <rect width="32" height="32" rx="6" fill="#fcf6ef"/>
-  <!-- Left vertical bar: 5px wide, crispEdges for pixel-perfect alignment -->
-  <rect x="4"  y="3" width="5" height="26" fill="#2b180a" shape-rendering="crispEdges"/>
-  <!-- Right vertical bar: 5px wide -->
-  <rect x="23" y="3" width="5" height="26" fill="#2b180a" shape-rendering="crispEdges"/>
-  <!-- Diagonal stroke of N: parallelogram from top-of-left-bar to bottom-of-right-bar.
-       1px overlap into each bar to prevent sub-pixel gaps at joints.
-       Perpendicular width ≈ 6px — matches bar weight. -->
-  <polygon points="8,3 15,3 24,29 17,29" fill="#2b180a"/>
+  <title>Naimab</title>
+  <!-- Dark warm background, rx=7 for premium rounded-square look -->
+  <rect width="32" height="32" rx="7" fill="#2b180a"/>
+  <!-- Left stem: 5×22px, pixel-locked -->
+  <rect x="5" y="5" width="5" height="22" fill="#fcf6ef" shape-rendering="crispEdges"/>
+  <!-- Right stem: 5×22px, pixel-locked -->
+  <rect x="22" y="5" width="5" height="22" fill="#fcf6ef" shape-rendering="crispEdges"/>
+  <!--
+    Diagonal of N: parallelogram from top-of-left-stem to bottom-of-right-stem.
+    Horizontal span = 5px  →  perpendicular width = 5 × (22/24.6) ≈ 4.5px
+    (~10% lighter than 5px stems — standard optical correction for diagonal strokes).
+    2px overlap into each stem prevents sub-pixel gaps at joints.
+      top  : x=[8,13]  left-stem=[5,10]  → 2px overlap + 3px extension
+      bottom: x=[19,24] right-stem=[22,27] → 3px approach + 2px overlap
+  -->
+  <polygon points="8,5 13,5 24,27 19,27" fill="#fcf6ef"/>
 </svg>
