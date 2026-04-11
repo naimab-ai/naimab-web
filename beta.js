@@ -1,4 +1,3 @@
-const helperEl = document.getElementById('download-helper');
 const missingBannerEl = document.getElementById('download-missing-banner');
 const headerEl = document.getElementById('main-header');
 const downloadLinks = Array.from(document.querySelectorAll('[data-download-link]'));
@@ -65,31 +64,17 @@ function applyReadyState({ sizeText }) {
   setDownloadLabels('Download for Windows', 'Start Download');
   setDownloadDisabled(false);
 
-  if (helperEl) {
-    helperEl.textContent = sizeText
-      ? `The current Windows beta is live (${sizeText}). Replace the installer at the same endpoint whenever you publish a fresh build.`
-      : 'The current Windows beta is live. Replace the installer at the same endpoint whenever you publish a fresh build.';
-  }
-
   hideMissingBanner();
 }
 
 function applyMissingState() {
   setDownloadLabels('Installer Coming Soon', 'Build Pending');
   setDownloadDisabled(true);
-
-  if (helperEl) {
-    helperEl.textContent = 'The page is ready, but the current Windows installer has not been uploaded yet.';
-  }
 }
 
 function applyErrorState() {
   setDownloadLabels('Retry Download', 'Retry');
   setDownloadDisabled(false);
-
-  if (helperEl) {
-    helperEl.textContent = 'We could not confirm the latest build automatically. You can retry the button above or contact the beta team.';
-  }
 }
 
 async function checkDownloadAvailability() {

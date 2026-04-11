@@ -1,7 +1,7 @@
-Place the latest Windows installer here as:
+The current Windows installer served by `/testx/download` is:
 
-`Naimab-Beta-Setup.exe`
+`/Naimab-0.1.0-win-x64.exe`
 
-The test landing page serves this file through the stable public URL:
+The stable public URL remains:
 
 `/testx/download`

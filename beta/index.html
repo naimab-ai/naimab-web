@@ -356,208 +356,59 @@ tailwind.config = {
 </head>
 <body class="bg-bg-main text-dark font-body overflow-x-hidden" style="--selection-background-color:#e8d3c0;--selection-color:#2b180a;">
 <div class="grain-overlay" aria-hidden="true"></div>
+<section class="beta-shell bg-bg-alt pt-[118px] lg:pt-[152px] pb-16 lg:pb-20 px-6 lg:px-16">
+  <div class="mx-auto max-w-[1120px] beta-hero-layout">
+    <div class="flex flex-col gap-6">
+      <h1 class="hero-title beta-hero-title">Download the <span class="gradient-text">Naimab Windows beta</span></h1>
+      <p class="beta-lead text-muted">A local-first desktop build for early testers. Catch burnout sooner, keep context between sessions, and help shape the product before public launch.</p>
 
-<div class="relative z-10 flex min-h-screen flex-col">
-  <header class="site-nav" id="main-header">
-    <div class="site-nav-inner">
-      <div class="site-nav-spacer hidden md:block" aria-hidden="true"></div>
-      <a href="/" class="site-nav-brand" aria-label="Naimab">
-        <span class="site-wordmark">Naimab</span>
-      </a>
-      <div class="site-nav-actions">
-        <a href="/" class="nav-pill nav-pill-secondary hidden md:inline-flex">
-          <span class="nav-pill-label nav-pill-label-ghost">Main Site</span>
-          <span class="nav-pill-label nav-pill-label-main">Back to Landing</span>
+      <div class="hero-actions flex flex-col sm:flex-row gap-4">
+        <a class="nav-pill nav-pill-primary text-base px-10 py-4 btn-shimmer beta-download-button" data-download-link href="/testx/download" download>
+          <span class="nav-pill-label nav-pill-label-ghost" data-download-label-ghost>Start Download</span>
+          <span class="nav-pill-label nav-pill-label-main" data-download-label-main>Download for Windows</span>
         </a>
-        <a href="mailto:hello@naimab.com" class="nav-pill nav-pill-primary hidden md:inline-flex">
-          <span class="nav-pill-label nav-pill-label-ghost">Need Help?</span>
-          <span class="nav-pill-label nav-pill-label-main">Contact Beta Team</span>
+        <a class="nav-pill nav-pill-secondary text-base px-10 py-4" href="/privacy">
+          <span class="nav-pill-label nav-pill-label-ghost">Privacy</span>
+          <span class="nav-pill-label nav-pill-label-main">Review Privacy Policy</span>
         </a>
-        <a href="/" class="md:hidden text-sm font-medium text-dark/60 hover:text-dark transition-colors duration-200">Home</a>
       </div>
+
+      <div class="beta-alert" id="download-missing-banner">The latest beta installer is not live right now. Please try again shortly or contact the beta team for access.</div>
     </div>
-  </header>
 
-  <main class="flex-1">
-    <section class="beta-shell bg-bg-alt pt-[118px] lg:pt-[152px] pb-16 lg:pb-20 px-6 lg:px-16">
-      <div class="mx-auto max-w-[1120px] beta-hero-layout">
-        <div class="flex flex-col gap-6">
-          <h1 class="hero-title beta-hero-title">Download the <span class="gradient-text">Naimab Windows beta</span></h1>
-          <p class="beta-lead text-muted">A local-first desktop build for early testers. Catch burnout sooner, keep context between sessions, and help shape the product before public launch.</p>
-
-          <div class="hero-actions flex flex-col sm:flex-row gap-4">
-            <a class="nav-pill nav-pill-primary text-base px-10 py-4 btn-shimmer beta-download-button" data-download-link href="/testx/download" download>
-              <span class="nav-pill-label nav-pill-label-ghost" data-download-label-ghost>Start Download</span>
-              <span class="nav-pill-label nav-pill-label-main" data-download-label-main>Download for Windows</span>
-            </a>
-            <a class="nav-pill nav-pill-secondary text-base px-10 py-4" href="/privacy">
-              <span class="nav-pill-label nav-pill-label-ghost">Privacy</span>
-              <span class="nav-pill-label nav-pill-label-main">Review Privacy Policy</span>
-            </a>
+    <div class="beta-preview">
+      <div class="beta-build-panel mockup-screen">
+        <div class="mockup-topbar">
+          <span class="mockup-dot" style="background:#ff5f57;"></span>
+          <span class="mockup-dot" style="background:#febc2e;"></span>
+          <span class="mockup-dot" style="background:#28c840;"></span>
+        </div>
+        <div class="beta-build-body">
+          <span class="beta-build-chip">Latest Beta Build</span>
+          <div>
+            <p class="step-title" style="font-size:40px;margin:0 0 10px;">Desktop installer, direct from the source</p>
+            <p class="step-desc" style="margin:0;">Use the main CTA to pull the newest Windows build. When you upload a fresh installer, this page automatically serves the new beta without changing the public link.</p>
           </div>
 
-          <p class="beta-helper" id="download-helper">The installer is published behind a stable test route, so you can swap builds without redesigning or updating this page.</p>
-          <div class="beta-alert" id="download-missing-banner">The latest beta installer is not live right now. Please try again shortly or contact the beta team for access.</div>
-        </div>
-
-        <div class="beta-preview">
-          <div class="beta-build-panel mockup-screen">
-            <div class="mockup-topbar">
-              <span class="mockup-dot" style="background:#ff5f57;"></span>
-              <span class="mockup-dot" style="background:#febc2e;"></span>
-              <span class="mockup-dot" style="background:#28c840;"></span>
+          <div class="beta-meta-grid">
+            <div class="beta-meta-card">
+              <div class="beta-meta-label">Platform</div>
+              <div class="beta-meta-value">Windows 10/11</div>
             </div>
-            <div class="beta-build-body">
-              <span class="beta-build-chip">Latest Beta Build</span>
-              <div>
-                <p class="step-title" style="font-size:40px;margin:0 0 10px;">Desktop installer, direct from the source</p>
-                <p class="step-desc" style="margin:0;">Use the main CTA to pull the newest Windows build. When you upload a fresh installer, this page automatically serves the new beta without changing the public link.</p>
-              </div>
-
-              <div class="beta-meta-grid">
-                <div class="beta-meta-card">
-                  <div class="beta-meta-label">Platform</div>
-                  <div class="beta-meta-value">Windows 10/11</div>
-                </div>
-                <div class="beta-meta-card">
-                  <div class="beta-meta-label">Delivery</div>
-                  <div class="beta-meta-value">Direct attachment</div>
-                </div>
-                <div class="beta-meta-card">
-                  <div class="beta-meta-label">Release flow</div>
-                  <div class="beta-meta-value">Same test URL</div>
-                </div>
-              </div>
+            <div class="beta-meta-card">
+              <div class="beta-meta-label">Delivery</div>
+              <div class="beta-meta-value">Direct attachment</div>
+            </div>
+            <div class="beta-meta-card">
+              <div class="beta-meta-label">Release flow</div>
+              <div class="beta-meta-value">Same test URL</div>
             </div>
           </div>
         </div>
       </div>
-    </section>
-
-    <div class="marquee-belt" role="marquee" aria-label="Beta highlights">
-      <div class="marquee-track">
-        <div class="marquee-item">Windows desktop beta<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Local-first product experience<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Stable download endpoint<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Fast tester access flow<span class="marquee-sep"></span></div>
-        <div class="marquee-item">AI guidance with memory<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Private beta feedback loop<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Windows desktop beta<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Local-first product experience<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Stable download endpoint<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Fast tester access flow<span class="marquee-sep"></span></div>
-        <div class="marquee-item">AI guidance with memory<span class="marquee-sep"></span></div>
-        <div class="marquee-item">Private beta feedback loop<span class="marquee-sep"></span></div>
-      </div>
     </div>
-
-    <section class="py-16 lg:py-20 px-6 lg:px-16">
-      <div class="mx-auto max-w-[1120px] flex flex-col gap-10">
-        <div class="flex flex-col gap-4 max-w-[650px]">
-          <span class="section-label w-fit">What Testers Get</span>
-          <h2 class="section-heading text-4xl md:text-[52px]">A beta page that feels like part of the product, not an afterthought</h2>
-          <p class="text-muted text-lg leading-relaxed">The download flow keeps the same Naimab tone and visual language while giving you a practical place to ship desktop builds to testers.</p>
-        </div>
-
-        <div class="beta-card-grid">
-          <article class="beta-info-card">
-            <span class="beta-card-kicker">01</span>
-            <h3 class="beta-card-title">One stable link</h3>
-            <p class="beta-card-copy">Testers can always use the same `/testx/download` URL. You replace the installer once, and every CTA on the page starts serving the new build.</p>
-            <ul class="beta-mini-list">
-              <li>No link rotation for each release</li>
-              <li>Works as a direct attachment download</li>
-              <li>Friendly fallback when the installer is missing</li>
-            </ul>
-          </article>
-
-          <article class="beta-info-card">
-            <span class="beta-card-kicker">02</span>
-            <h3 class="beta-card-title">On-brand presentation</h3>
-            <p class="beta-card-copy">The page reuses the same typography, colors, grain, CTA treatment, and overall rhythm as the landing so it feels native to the current site.</p>
-            <ul class="beta-mini-list">
-              <li>Shared Halant and Geist typography</li>
-              <li>Same warm palette and pill buttons</li>
-              <li>Dashboard-led product framing</li>
-            </ul>
-          </article>
-
-          <article class="beta-info-card">
-            <span class="beta-card-kicker">03</span>
-            <h3 class="beta-card-title">Tester-friendly status</h3>
-            <p class="beta-card-copy">The page checks whether a build is actually live and updates the UI accordingly, so you avoid sending people into a dead download flow.</p>
-            <ul class="beta-mini-list">
-              <li>Ready, missing, and error states</li>
-              <li>Windows-aware helper copy</li>
-              <li>Automatic file size display when available</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="bg-bg-alt py-16 lg:py-20 px-6 lg:px-16">
-      <div class="mx-auto max-w-[1120px] flex flex-col gap-10">
-        <div class="flex flex-col gap-4 max-w-[650px]">
-          <span class="section-label w-fit">How It Works</span>
-          <h2 class="section-heading text-4xl md:text-[52px]">A simple release flow for each new Windows beta</h2>
-        </div>
-
-        <div class="beta-card-grid">
-          <article class="beta-step-card">
-            <span class="step-number">01</span>
-            <h3 class="step-title">Drop in the new installer</h3>
-            <p class="step-desc">Place the latest Windows build in the repo at the expected download path and deploy the site.</p>
-          </article>
-
-          <article class="beta-step-card">
-            <span class="step-number">02</span>
-            <h3 class="step-title">Keep the public link</h3>
-            <p class="step-desc">The page and direct download endpoint stay the same, so you do not need to update the beta CTA or resend a new URL.</p>
-          </article>
-
-          <article class="beta-step-card">
-            <span class="step-number">03</span>
-            <h3 class="step-title">Let testers pull the latest build</h3>
-            <p class="step-desc">Once deployed, the button becomes live and the page can surface the download size automatically.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="py-16 lg:py-20 px-6 lg:px-16">
-      <div class="mx-auto max-w-[1120px]">
-        <div class="beta-support-card">
-          <div class="beta-support-copy flex flex-col gap-4">
-            <span class="section-label w-fit">Support</span>
-            <h2 class="section-heading text-4xl md:text-[52px]">Need a tester handoff page that still feels premium?</h2>
-            <p class="text-muted text-lg leading-relaxed">This route is already ready for that job. Share `/testx` with testers, keep the installer current, and route support questions to the beta inbox.</p>
-          </div>
-          <a href="mailto:hello@naimab.com?subject=Naimab%20beta%20support" class="nav-pill nav-pill-primary text-base px-10 py-4">
-            <span class="nav-pill-label nav-pill-label-ghost">Need Help?</span>
-            <span class="nav-pill-label nav-pill-label-main">Email Beta Support</span>
-          </a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="border-t border-dark/6 bg-bg-main px-6 lg:px-16">
-    <div class="max-w-[1120px] mx-auto py-8">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="flex flex-col items-center md:items-start gap-2">
-          <span class="site-wordmark" style="font-size:28px;">Naimab</span>
-          <p class="text-muted text-sm">Private beta download page for Windows testers.</p>
-        </div>
-        <div class="flex gap-6 text-xs text-muted">
-          <a href="/" class="hover:text-dark transition-colors">Main Site</a>
-          <a href="/privacy" class="hover:text-dark transition-colors">Privacy Policy</a>
-          <a href="mailto:hello@naimab.com" class="hover:text-dark transition-colors">Contact</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-</div>
+  </div>
+</section>
 
 <script src="/beta.js?v=20260411"></script>
 </body>

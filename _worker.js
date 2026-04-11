@@ -8,8 +8,8 @@ const TESTX_PAGE_PATH = '/testx';
 const TESTX_DOWNLOAD_PATH = '/testx/download';
 const LEGACY_BETA_PAGE_PATH = '/beta';
 const LEGACY_BETA_DOWNLOAD_PATH = '/beta/download';
-const BETA_INSTALLER_ASSET_PATH = '/downloads/Naimab-Beta-Setup.exe';
-const BETA_INSTALLER_FILENAME = 'Naimab-Beta-Setup.exe';
+const BETA_INSTALLER_ASSET_PATH = '/Naimab-0.1.0-win-x64.exe';
+const BETA_INSTALLER_FILENAME = 'Naimab-0.1.0-win-x64.exe';
 const TESTX_PAGE_ASSET_PATH = '/beta/index.html';
 
 export default {
