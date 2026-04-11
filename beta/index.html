@@ -54,6 +54,18 @@ tailwind.config = {
 .beta-shell {
   position: relative;
   isolation: isolate;
+  min-height: 100svh;
+  display: flex;
+}
+
+.beta-shell-frame {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 28px;
 }
 
 .beta-shell::before {
@@ -90,6 +102,7 @@ tailwind.config = {
   grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
   gap: 48px;
   align-items: center;
+  flex: 1;
 }
 
 .beta-hero-title {
@@ -103,14 +116,6 @@ tailwind.config = {
   max-width: 38rem;
   font-size: 1.08rem;
   line-height: 1.78;
-}
-
-.beta-helper {
-  max-width: 38rem;
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.7;
-  color: rgba(43, 24, 10, 0.56);
 }
 
 .beta-alert {
@@ -143,6 +148,32 @@ tailwind.config = {
 
 .beta-preview {
   position: relative;
+}
+
+.beta-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(43, 24, 10, 0.08);
+}
+
+.beta-bottom-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(43, 24, 10, 0.58);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.beta-bottom-link:hover,
+.beta-bottom-link:focus-visible {
+  color: var(--color-dark);
+  transform: translateY(-1px);
 }
 
 .beta-build-panel {
@@ -342,6 +373,11 @@ tailwind.config = {
   .beta-meta-grid {
     grid-template-columns: 1fr;
   }
+
+  .beta-bottom-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 639.98px) {
@@ -357,55 +393,62 @@ tailwind.config = {
 <body class="bg-bg-main text-dark font-body overflow-x-hidden" style="--selection-background-color:#e8d3c0;--selection-color:#2b180a;">
 <div class="grain-overlay" aria-hidden="true"></div>
 <section class="beta-shell bg-bg-alt pt-[118px] lg:pt-[152px] pb-16 lg:pb-20 px-6 lg:px-16">
-  <div class="mx-auto max-w-[1120px] beta-hero-layout">
-    <div class="flex flex-col gap-6">
-      <h1 class="hero-title beta-hero-title">Download the <span class="gradient-text">Naimab Windows beta</span></h1>
-      <p class="beta-lead text-muted">A local-first desktop build for early testers. Catch burnout sooner, keep context between sessions, and help shape the product before public launch.</p>
+  <div class="beta-shell-frame">
+    <div class="beta-hero-layout">
+      <div class="flex flex-col gap-6">
+        <h1 class="hero-title beta-hero-title">Download the <span class="gradient-text">Naimab Windows beta</span></h1>
+        <p class="beta-lead text-muted">A local-first desktop build for early testers. Catch burnout sooner, keep context between sessions, and help shape the product before public launch.</p>
 
-      <div class="hero-actions flex flex-col sm:flex-row gap-4">
-        <a class="nav-pill nav-pill-primary text-base px-10 py-4 btn-shimmer beta-download-button" data-download-link href="/testx/download" download>
-          <span class="nav-pill-label nav-pill-label-ghost" data-download-label-ghost>Start Download</span>
-          <span class="nav-pill-label nav-pill-label-main" data-download-label-main>Download for Windows</span>
-        </a>
-        <a class="nav-pill nav-pill-secondary text-base px-10 py-4" href="/privacy">
-          <span class="nav-pill-label nav-pill-label-ghost">Privacy</span>
-          <span class="nav-pill-label nav-pill-label-main">Review Privacy Policy</span>
-        </a>
+        <div class="hero-actions flex flex-col sm:flex-row gap-4">
+          <a class="nav-pill nav-pill-primary text-base px-10 py-4 btn-shimmer beta-download-button" data-download-link href="/testx/download" download>
+            <span class="nav-pill-label nav-pill-label-ghost" data-download-label-ghost>Start Download</span>
+            <span class="nav-pill-label nav-pill-label-main" data-download-label-main>Download for Windows</span>
+          </a>
+          <a class="nav-pill nav-pill-secondary text-base px-10 py-4" href="/privacy">
+            <span class="nav-pill-label nav-pill-label-ghost">Privacy</span>
+            <span class="nav-pill-label nav-pill-label-main">Review Privacy Policy</span>
+          </a>
+        </div>
+
+        <div class="beta-alert" id="download-missing-banner">The latest beta installer is not live right now. Please try again shortly or contact the beta team for access.</div>
       </div>
 
-      <div class="beta-alert" id="download-missing-banner">The latest beta installer is not live right now. Please try again shortly or contact the beta team for access.</div>
+      <div class="beta-preview">
+        <div class="beta-build-panel mockup-screen">
+          <div class="mockup-topbar">
+            <span class="mockup-dot" style="background:#ff5f57;"></span>
+            <span class="mockup-dot" style="background:#febc2e;"></span>
+            <span class="mockup-dot" style="background:#28c840;"></span>
+          </div>
+          <div class="beta-build-body">
+            <span class="beta-build-chip">Latest Beta Build</span>
+            <div>
+              <p class="step-title" style="font-size:40px;margin:0 0 10px;">Desktop installer, direct from the source</p>
+              <p class="step-desc" style="margin:0;">Use the main CTA to pull the newest Windows build. When you upload a fresh installer, this page automatically serves the new beta without changing the public link.</p>
+            </div>
+
+            <div class="beta-meta-grid">
+              <div class="beta-meta-card">
+                <div class="beta-meta-label">Platform</div>
+                <div class="beta-meta-value">Windows 10/11</div>
+              </div>
+              <div class="beta-meta-card">
+                <div class="beta-meta-label">Delivery</div>
+                <div class="beta-meta-value">Direct attachment</div>
+              </div>
+              <div class="beta-meta-card">
+                <div class="beta-meta-label">Release flow</div>
+                <div class="beta-meta-value">Same test URL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="beta-preview">
-      <div class="beta-build-panel mockup-screen">
-        <div class="mockup-topbar">
-          <span class="mockup-dot" style="background:#ff5f57;"></span>
-          <span class="mockup-dot" style="background:#febc2e;"></span>
-          <span class="mockup-dot" style="background:#28c840;"></span>
-        </div>
-        <div class="beta-build-body">
-          <span class="beta-build-chip">Latest Beta Build</span>
-          <div>
-            <p class="step-title" style="font-size:40px;margin:0 0 10px;">Desktop installer, direct from the source</p>
-            <p class="step-desc" style="margin:0;">Use the main CTA to pull the newest Windows build. When you upload a fresh installer, this page automatically serves the new beta without changing the public link.</p>
-          </div>
-
-          <div class="beta-meta-grid">
-            <div class="beta-meta-card">
-              <div class="beta-meta-label">Platform</div>
-              <div class="beta-meta-value">Windows 10/11</div>
-            </div>
-            <div class="beta-meta-card">
-              <div class="beta-meta-label">Delivery</div>
-              <div class="beta-meta-value">Direct attachment</div>
-            </div>
-            <div class="beta-meta-card">
-              <div class="beta-meta-label">Release flow</div>
-              <div class="beta-meta-value">Same test URL</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="beta-bottom-bar">
+      <a class="beta-bottom-link" href="/">Go Back to Landing</a>
+      <a class="beta-bottom-link" href="/privacy">Privacy Policy</a>
     </div>
   </div>
 </section>

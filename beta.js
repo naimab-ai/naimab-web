@@ -1,13 +1,7 @@
 const missingBannerEl = document.getElementById('download-missing-banner');
-const headerEl = document.getElementById('main-header');
 const downloadLinks = Array.from(document.querySelectorAll('[data-download-link]'));
 const mainLabelEls = Array.from(document.querySelectorAll('[data-download-label-main]'));
 const ghostLabelEls = Array.from(document.querySelectorAll('[data-download-label-ghost]'));
-
-function updateHeaderState() {
-  if (!headerEl) return;
-  headerEl.classList.toggle('scrolled', window.scrollY > 8);
-}
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return '';
@@ -111,9 +105,6 @@ downloadLinks.forEach((link) => {
     }
   });
 });
-
-window.addEventListener('scroll', updateHeaderState, { passive: true });
-updateHeaderState();
 
 const currentUrl = new URL(window.location.href);
 if (currentUrl.searchParams.get('download') === 'missing') {

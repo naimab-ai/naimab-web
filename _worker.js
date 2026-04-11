@@ -8,6 +8,9 @@ const TESTX_PAGE_PATH = '/testx';
 const TESTX_DOWNLOAD_PATH = '/testx/download';
 const LEGACY_BETA_PAGE_PATH = '/beta';
 const LEGACY_BETA_DOWNLOAD_PATH = '/beta/download';
+const TESTX_INSTALLER_URL_ENV_KEY = 'TESTX_INSTALLER_URL';
+const TESTX_INSTALLER_FILENAME_ENV_KEY = 'TESTX_INSTALLER_FILENAME';
+const DEFAULT_TESTX_INSTALLER_URL = 'https://downloads.naimab.com/Naimab-0.1.0-win-x64.exe';
 const BETA_INSTALLER_ASSET_PATH = '/Naimab-0.1.0-win-x64.exe';
 const BETA_INSTALLER_FILENAME = 'Naimab-0.1.0-win-x64.exe';
 const TESTX_PAGE_ASSET_PATH = '/beta/index.html';
@@ -60,6 +63,11 @@ async function handleBetaDownloadRequest(request, env) {
     );
   }
 
+  const externalInstallerUrl = getExternalInstallerUrl(env);
+  if (externalInstallerUrl) {
+    return handleExternalInstallerRequest(request, env, externalInstallerUrl);
+  }
+
   const assetUrl = new URL(request.url);
   assetUrl.pathname = BETA_INSTALLER_ASSET_PATH;
   assetUrl.search = '';
@@ -81,7 +89,7 @@ async function handleBetaDownloadRequest(request, env) {
     new Response(assetResponse.body, {
       status: assetResponse.status,
       statusText: assetResponse.statusText,
-      headers,
+      headers: applyInstallerHeaders(headers, env, BETA_INSTALLER_FILENAME),
     }),
     request,
     env,
@@ -124,4 +132,109 @@ async function redirectToTestx(request, env, pathname) {
   redirectUrl.pathname = pathname;
 
   return withSecurityHeaders(Response.redirect(redirectUrl.toString(), 302), request, env);
+}
+
+function getExternalInstallerUrl(env) {
+  const rawValue = env?.[TESTX_INSTALLER_URL_ENV_KEY];
+  const candidateUrl =
+    typeof rawValue === 'string' && rawValue.trim()
+      ? rawValue.trim()
+      : DEFAULT_TESTX_INSTALLER_URL;
+
+  try {
+    const parsedUrl = new URL(candidateUrl);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return '';
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return '';
+  }
+}
+
+async function handleExternalInstallerRequest(request, env, installerUrl) {
+  let upstreamResponse;
+
+  try {
+    upstreamResponse = await fetch(installerUrl, {
+      method: request.method,
+      headers: filterForwardHeaders(request.headers),
+      redirect: 'follow',
+    });
+  } catch {
+    return withSecurityHeaders(
+      new Response(request.method === 'HEAD' ? null : 'Installer source is unavailable', {
+        status: 502,
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }),
+      request,
+      env,
+    );
+  }
+
+  if (upstreamResponse.status === 404) {
+    return handleMissingBetaDownload(request, env);
+  }
+
+  const headers = applyInstallerHeaders(
+    new Headers(upstreamResponse.headers),
+    env,
+    installerUrl,
+  );
+
+  return withSecurityHeaders(
+    new Response(request.method === 'HEAD' ? null : upstreamResponse.body, {
+      status: upstreamResponse.status,
+      statusText: upstreamResponse.statusText,
+      headers,
+    }),
+    request,
+    env,
+  );
+}
+
+function filterForwardHeaders(headers) {
+  const nextHeaders = new Headers();
+  const range = headers.get('range');
+  if (range) {
+    nextHeaders.set('range', range);
+  }
+  return nextHeaders;
+}
+
+function getInstallerFilename(env, sourceValue) {
+  const explicitFilename = env?.[TESTX_INSTALLER_FILENAME_ENV_KEY];
+  if (typeof explicitFilename === 'string' && explicitFilename.trim()) {
+    return explicitFilename.trim();
+  }
+
+  if (typeof sourceValue === 'string' && sourceValue.trim()) {
+    try {
+      const parsedUrl = new URL(sourceValue);
+      const segments = parsedUrl.pathname.split('/').filter(Boolean);
+      return segments[segments.length - 1] || BETA_INSTALLER_FILENAME;
+    } catch {
+      const normalized = sourceValue.split('/').filter(Boolean).pop();
+      if (normalized) {
+        return normalized;
+      }
+    }
+  }
+
+  return BETA_INSTALLER_FILENAME;
+}
+
+function applyInstallerHeaders(headers, env, sourceValue) {
+  const nextHeaders = new Headers(headers);
+  nextHeaders.set('Cache-Control', 'no-store');
+  nextHeaders.set('Content-Disposition', `attachment; filename="${getInstallerFilename(env, sourceValue)}"`);
+
+  if (!nextHeaders.has('Content-Type')) {
+    nextHeaders.set('Content-Type', 'application/octet-stream');
+  }
+
+  return nextHeaders;
 }
