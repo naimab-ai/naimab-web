@@ -125,7 +125,7 @@ async function checkDownloadAvailability() {
   setDownloadLabels('Checking Build', 'Checking');
 
   try {
-    const response = await fetch('/beta/download', {
+    const response = await fetch('/testx/download', {
       method: 'HEAD',
       cache: 'no-store',
       redirect: 'manual',

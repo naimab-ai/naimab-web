@@ -4,16 +4,32 @@ import {
   withSecurityHeaders,
 } from './server/api.js';
 
-const BETA_DOWNLOAD_PATH = '/beta/download';
+const TESTX_PAGE_PATH = '/testx';
+const TESTX_DOWNLOAD_PATH = '/testx/download';
+const LEGACY_BETA_PAGE_PATH = '/beta';
+const LEGACY_BETA_DOWNLOAD_PATH = '/beta/download';
 const BETA_INSTALLER_ASSET_PATH = '/downloads/Naimab-Beta-Setup.exe';
 const BETA_INSTALLER_FILENAME = 'Naimab-Beta-Setup.exe';
+const TESTX_PAGE_ASSET_PATH = '/beta/index.html';
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === BETA_DOWNLOAD_PATH) {
+    if (url.pathname === TESTX_DOWNLOAD_PATH) {
       return handleBetaDownloadRequest(request, env);
+    }
+
+    if (url.pathname === LEGACY_BETA_DOWNLOAD_PATH) {
+      return redirectToTestx(request, env, TESTX_DOWNLOAD_PATH);
+    }
+
+    if (url.pathname === TESTX_PAGE_PATH || url.pathname === `${TESTX_PAGE_PATH}/`) {
+      return handleTestxPageRequest(request, env);
+    }
+
+    if (url.pathname === LEGACY_BETA_PAGE_PATH || url.pathname === `${LEGACY_BETA_PAGE_PATH}/`) {
+      return redirectToTestx(request, env, TESTX_PAGE_PATH);
     }
 
     if (url.pathname === '/api/subscribe') {
@@ -88,8 +104,24 @@ async function handleMissingBetaDownload(request, env) {
   }
 
   const redirectUrl = new URL(request.url);
-  redirectUrl.pathname = '/beta';
+  redirectUrl.pathname = TESTX_PAGE_PATH;
   redirectUrl.search = 'download=missing';
+
+  return withSecurityHeaders(Response.redirect(redirectUrl.toString(), 302), request, env);
+}
+
+async function handleTestxPageRequest(request, env) {
+  const pageUrl = new URL(request.url);
+  pageUrl.pathname = TESTX_PAGE_ASSET_PATH;
+  pageUrl.search = '';
+
+  const assetResponse = await env.ASSETS.fetch(new Request(pageUrl.toString(), request));
+  return withSecurityHeaders(assetResponse, request, env);
+}
+
+async function redirectToTestx(request, env, pathname) {
+  const redirectUrl = new URL(request.url);
+  redirectUrl.pathname = pathname;
 
   return withSecurityHeaders(Response.redirect(redirectUrl.toString(), 302), request, env);
 }

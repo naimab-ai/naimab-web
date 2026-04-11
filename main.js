@@ -7,6 +7,10 @@ const reduceMotionQuery = typeof window.matchMedia === 'function'
   ? window.matchMedia('(prefers-reduced-motion: reduce)')
   : { matches: false };
 
+function prefersReducedMotion() {
+  return Boolean(reduceMotionQuery && reduceMotionQuery.matches);
+}
+
 function wait(ms) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -38,6 +42,13 @@ function animateElementWithFallback(element, keyframes, options = {}, onFinish) 
     if (typeof onFinish === 'function') onFinish();
   };
 
+  if (prefersReducedMotion() && !options.allowReducedMotion) {
+    const finalFrame = keyframes[keyframes.length - 1];
+    applyInlineFrameStyles(element, finalFrame);
+    finish();
+    return { cancel: finish };
+  }
+
   if (typeof element.animate === 'function') {
     const animation = element.animate(keyframes, options);
     if (animation && animation.finished && typeof animation.finished.finally === 'function') {
@@ -53,12 +64,6 @@ function animateElementWithFallback(element, keyframes, options = {}, onFinish) 
 
   const firstFrame = keyframes[0];
   const finalFrame = keyframes[keyframes.length - 1];
-  if (reduceMotionQuery.matches) {
-    applyInlineFrameStyles(element, finalFrame);
-    finish();
-    return { cancel: finish };
-  }
-
   const duration = Math.max(0, Number(options.duration) || 0);
   const delay = Math.max(0, Number(options.delay) || 0);
   const easing = options.easing || 'ease';
@@ -261,6 +266,24 @@ const DEFAULT_REVEAL_DISTANCES = {
   'fade-in': 0,
 };
 
+const REDUCED_REVEAL_PRESET = {
+  duration: 260,
+  easing: 'ease-out',
+  initial() {
+    return {
+      opacity: '0.001',
+      transform: 'none',
+      filter: 'none',
+    };
+  },
+  keyframes() {
+    return [
+      { opacity: 0.001, transform: 'none', filter: 'none' },
+      { opacity: 1, transform: 'none', filter: 'none' },
+    ];
+  },
+};
+
 function getRevealConfigValue(target, key) {
   const value = target && target.dataset ? target.dataset[key] : null;
   if (value) return value;
@@ -424,7 +447,7 @@ function armRevealPieces(target) {
   target.__revealPieces = pieces;
 
   pieces.forEach((piece) => {
-    if (reduceMotionQuery.matches) {
+    if (prefersReducedMotion()) {
       resetRevealPieceStyles(piece);
       return;
     }
@@ -446,7 +469,7 @@ function animateRevealPieces(target, delay = 0) {
   const duration = isLetterReveal ? 760 : 880;
 
   pieces.forEach((piece, index) => {
-    if (reduceMotionQuery.matches) {
+    if (prefersReducedMotion()) {
       resetRevealPieceStyles(piece);
       return;
     }
@@ -478,9 +501,8 @@ function armRevealTarget(target) {
   target.classList.add('reveal-target');
   armRevealPieces(target);
 
-  if (reduceMotionQuery.matches) {
-    resetRevealStyles(target);
-    target.dataset.revealDone = 'true';
+  if (prefersReducedMotion()) {
+    applyRevealStyles(target, REDUCED_REVEAL_PRESET.initial());
     return;
   }
 
@@ -490,16 +512,25 @@ function armRevealTarget(target) {
 function animateRevealTarget(target, delay = 0) {
   if (!target || target.dataset.revealDone === 'true') return;
 
-  if (reduceMotionQuery.matches) {
-    resetRevealStyles(target);
-    target.dataset.revealDone = 'true';
+  const resolvedDelay = delay || getRevealNumber(target, 'revealDelay') || 0;
+
+  if (prefersReducedMotion()) {
+    animateElementWithFallback(target, REDUCED_REVEAL_PRESET.keyframes(), {
+      duration: REDUCED_REVEAL_PRESET.duration,
+      delay: resolvedDelay,
+      easing: REDUCED_REVEAL_PRESET.easing,
+      fill: 'forwards',
+      allowReducedMotion: true,
+    }, () => {
+      resetRevealStyles(target);
+      target.dataset.revealDone = 'true';
+    });
     return;
   }
 
   const presetName = target.dataset.revealPreset || getRevealPreset(target);
   const preset = REVEAL_PRESETS[presetName];
   const distance = Number(target.dataset.revealDistance || getRevealDistance(target, presetName));
-  const resolvedDelay = delay || getRevealNumber(target, 'revealDelay') || 0;
 
   animateElementWithFallback(target, preset.keyframes(distance), {
     duration: preset.duration,
@@ -601,7 +632,7 @@ function prepareRevealSystem() {
 function startHeroSequence() {
   const heroSequence = preparedHeroSequence.length > 0 ? preparedHeroSequence : getHeroSequence();
 
-  if (!reduceMotionQuery.matches) {
+  if (!prefersReducedMotion()) {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         heroSequence.forEach(({ target, delay }) => animateRevealTarget(target, delay));
@@ -618,20 +649,15 @@ function initializeRevealSystem() {
 
   prepareRevealSystem();
   const revealGroups = preparedRevealGroups;
+  const revealObserver = createIntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      animateRevealGroup(entry.target);
+      revealObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.18, rootMargin: '0px 0px -12% 0px' });
 
-  if (!reduceMotionQuery.matches) {
-    const revealObserver = createIntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        animateRevealGroup(entry.target);
-        revealObserver.unobserve(entry.target);
-      });
-    }, { threshold: 0.18, rootMargin: '0px 0px -12% 0px' });
-
-    revealGroups.forEach((group) => revealObserver.observe(group));
-  } else {
-    revealGroups.forEach(animateRevealGroup);
-  }
+  revealGroups.forEach((group) => revealObserver.observe(group));
 
   startHeroSequence();
 }
@@ -704,8 +730,33 @@ async function playBrandIntroReveal() {
   }
 }
 
+async function playReducedMotionBrandIntro() {
+  if (!brandIntroLive || !brandIntro) return;
+
+  brandIntroLive.textContent = '';
+  Array.from(BRAND_INTRO_TEXT).forEach((char) => {
+    const letter = createBrandIntroLetter(char);
+    letter.classList.add('is-visible');
+    brandIntroLive.appendChild(letter);
+  });
+
+  brandIntro.classList.add('is-caption-visible');
+  await wait(220);
+  document.body.classList.remove('preload-intro');
+  initializeRevealSystem();
+  brandIntro.classList.add('is-exiting');
+  await wait(220);
+  brandIntro.classList.add('is-hidden');
+}
+
 async function runBrandIntro() {
   if (!brandIntro || !brandIntroLive) return;
+
+  if (prefersReducedMotion()) {
+    await waitForBrandIntroFonts();
+    await playReducedMotionBrandIntro();
+    return;
+  }
 
   await waitForBrandIntroFonts();
   await wait(80);
@@ -766,7 +817,7 @@ bootLandingExperience();
 
 // ── Smooth scrolling (desktop inertia) ──
 const smoothScrollEnabled =
-  !reduceMotionQuery.matches &&
+  !prefersReducedMotion() &&
   window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 const smoothScrollState = {
@@ -1487,7 +1538,7 @@ bindModalForm();
   }
 
   /* ── Reduced motion ── */
-  if (reduceMotionQuery.matches) {
+  if (prefersReducedMotion()) {
     resize();
     nodes.forEach(n => {
       n.alpha = 1;
@@ -1500,7 +1551,27 @@ bindModalForm();
     });
     edges.forEach(e => { e.alpha = e.weight; });
     drawFrame(10);
-    if (statusEl) { statusEl.textContent = 'AI memory graph'; statusEl.style.opacity = '0.5'; }
+    wrap.style.opacity = '0.001';
+    if (statusEl) {
+      statusEl.textContent = 'AI memory graph';
+      statusEl.style.opacity = '0.5';
+    }
+    const reducedObserver = createIntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        animateElementWithFallback(wrap, [
+          { opacity: 0.001 },
+          { opacity: 1 },
+        ], {
+          duration: 260,
+          easing: 'ease-out',
+          fill: 'forwards',
+          allowReducedMotion: true,
+        });
+        reducedObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.1 });
+    reducedObserver.observe(wrap);
     return;
   }
 
@@ -2007,18 +2078,40 @@ bindModalForm();
     }, 13500);
   }
 
-  /* ── Reduced motion: static final state ── */
-  if (reduceMotionQuery.matches) {
-    statusBar.style.opacity = '1';
-    statusText.textContent = 'Hypothesis confirmed \u2713';
-    signals.forEach(s => s.classList.add('is-visible', 'is-linked'));
-    divider.classList.add('is-visible');
-    body.classList.add('is-visible');
-    textEl.textContent = HYPOTHESIS;
-    cursor.style.display = 'none';
-    footer.classList.add('is-visible');
-    confFill.style.width = '82%';
-    confVal.textContent = 'Confidence: 82%';
+  /* ── Reduced motion: gentle fade-in without motion-heavy loops ── */
+  if (prefersReducedMotion()) {
+    let hasRevealed = false;
+    const reducedObserver = createIntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting || hasRevealed) return;
+        hasRevealed = true;
+        reset();
+        statusBar.style.opacity = '1';
+        signals.forEach((signal, index) => {
+          sched(() => {
+            signal.classList.add('is-visible');
+          }, 120 + index * 90);
+        });
+        sched(() => {
+          statusText.textContent = 'Hypothesis confirmed \u2713';
+          signals.forEach(s => s.classList.add('is-linked'));
+          divider.classList.add('is-visible');
+        }, 420);
+        sched(() => {
+          body.classList.add('is-visible');
+          textEl.textContent = HYPOTHESIS;
+          cursor.style.display = 'none';
+        }, 560);
+        sched(() => {
+          footer.classList.add('is-visible');
+          confFill.style.transition = 'width 0.8s ease';
+          confFill.style.width = '82%';
+          confVal.textContent = 'Confidence: 82%';
+        }, 720);
+        reducedObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.15 });
+    reducedObserver.observe(wrap);
     return;
   }
 
@@ -2185,30 +2278,37 @@ bindModalForm();
     }, t);
   }
 
-  /* Reduced motion: static final state */
-  if (reduceMotionQuery.matches) {
-    header.classList.add('is-visible');
-    LINES.forEach(cfg => {
-      if (cfg.type === 'spacer') {
-        output.appendChild(Object.assign(document.createElement('div'), { className: 'concl-spacer' }));
-        return;
-      }
-      const el = document.createElement('div');
-      el.className = 'concl-line is-visible';
-      if (cfg.type === 'finding') el.classList.add('is-finding');
-      if (cfg.type === 'warn') el.classList.add('is-warn');
-      if (cfg.type === 'risk') {
-        el.classList.add('is-highlight');
-        el.innerHTML = 'Burnout Risk: <span class="concl-risk-val">' + cfg.risk + '%</span> <span class="concl-risk-badge">High Risk</span>';
-      } else if (cfg.type === 'predict') {
-        el.classList.add('is-predict');
-        el.innerHTML = 'If nothing changes: <span class="concl-risk-val">' + cfg.from + '%</span> <span class="concl-predict-arrow">\u2192</span> <span class="concl-predict-val">' + cfg.to + '%</span> in ' + cfg.days + ' days';
-      } else {
-        el.textContent = cfg.text;
-      }
-      output.appendChild(el);
-    });
-    showStatus('<span class="concl-status-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4.2 7.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Your Recovery Plan is ready', true);
+  /* Reduced motion: staged fade-in without looping */
+  if (prefersReducedMotion()) {
+    let hasRevealed = false;
+    const reducedObserver = createIntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting || hasRevealed) return;
+        hasRevealed = true;
+        reset();
+        sched(() => header.classList.add('is-visible'), 80);
+        let revealAt = 220;
+        LINES.forEach((cfg) => {
+          revealAt += cfg.type === 'spacer' ? 120 : 110;
+          sched(() => {
+            addLine(cfg);
+            const lastLine = output.lastElementChild;
+            if (lastLine && lastLine.classList && lastLine.classList.contains('concl-line')) {
+              lastLine.classList.add('is-visible');
+              if (cfg.type === 'predict') {
+                const counter = document.getElementById('concl-predict-counter');
+                if (counter) counter.textContent = cfg.to + '%';
+              }
+            }
+          }, revealAt);
+        });
+        sched(() => {
+          showStatus('<span class="concl-status-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4.2 7.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Your Recovery Plan is ready', true);
+        }, revealAt + 280);
+        reducedObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.15 });
+    reducedObserver.observe(wrap);
     return;
   }
 

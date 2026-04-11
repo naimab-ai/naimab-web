@@ -986,6 +986,32 @@ body.preload-intro #site-shell {
   .btn-shimmer::after {
     animation: none;
   }
+
+  .brand-intro-letter,
+  .brand-intro-caption,
+  .hyp-signal,
+  .hyp-divider,
+  .hyp-body,
+  .hyp-footer,
+  .concl-header,
+  .concl-line {
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .brand-intro-letter {
+    transition: opacity 0.28s ease !important;
+  }
+
+  .brand-intro-caption,
+  .hyp-signal,
+  .hyp-divider,
+  .hyp-body,
+  .hyp-footer,
+  .concl-header,
+  .concl-line {
+    transition-property: opacity !important;
+  }
 }
 
 /* ── Mobile menu ── */
