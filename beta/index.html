@@ -51,15 +51,6 @@ tailwind.config = {
 }
 </script>
 <style>
-:root {
-  --beta-success: #2f7a42;
-  --beta-success-soft: rgba(47, 122, 66, 0.12);
-  --beta-warning: #b96b2c;
-  --beta-warning-soft: rgba(185, 107, 44, 0.12);
-  --beta-danger: #b14e43;
-  --beta-danger-soft: rgba(177, 78, 67, 0.12);
-}
-
 .beta-shell {
   position: relative;
   isolation: isolate;
@@ -112,69 +103,6 @@ tailwind.config = {
   max-width: 38rem;
   font-size: 1.08rem;
   line-height: 1.78;
-}
-
-.beta-status-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 22px;
-}
-
-.beta-status-pill {
-  --beta-status-color: var(--color-accent);
-  --beta-status-glow: rgba(218, 182, 151, 0.16);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 10px 15px;
-  border-radius: 999px;
-  border: 1px solid rgba(43, 24, 10, 0.08);
-  background: rgba(43, 24, 10, 0.04);
-  color: rgba(43, 24, 10, 0.7);
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-
-.beta-status-pill::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--beta-status-color);
-  box-shadow: 0 0 0 6px var(--beta-status-glow);
-  flex-shrink: 0;
-}
-
-.beta-status-pill.is-ready {
-  --beta-status-color: var(--beta-success);
-  --beta-status-glow: var(--beta-success-soft);
-  border-color: rgba(47, 122, 66, 0.16);
-  background: rgba(47, 122, 66, 0.08);
-  color: #245333;
-}
-
-.beta-status-pill.is-missing {
-  --beta-status-color: var(--beta-warning);
-  --beta-status-glow: var(--beta-warning-soft);
-  border-color: rgba(185, 107, 44, 0.18);
-  background: rgba(185, 107, 44, 0.08);
-  color: #7b461b;
-}
-
-.beta-status-pill.is-error {
-  --beta-status-color: var(--beta-danger);
-  --beta-status-glow: var(--beta-danger-soft);
-  border-color: rgba(177, 78, 67, 0.18);
-  background: rgba(177, 78, 67, 0.08);
-  color: #7d3b34;
-}
-
-.beta-platform-note {
-  font-size: 0.92rem;
-  color: var(--color-muted);
 }
 
 .beta-helper {
@@ -290,35 +218,6 @@ tailwind.config = {
   color: var(--color-dark);
 }
 
-.beta-dashboard-frame {
-  position: relative;
-  margin: -44px 18px 0 64px;
-  padding: 16px 16px 0;
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(239, 231, 221, 0.78));
-  border: 1px solid rgba(43, 24, 10, 0.06);
-  box-shadow: 0 20px 70px rgba(43, 24, 10, 0.1);
-  z-index: 1;
-}
-
-.beta-dashboard-frame::after {
-  content: "";
-  position: absolute;
-  left: 26px;
-  right: 26px;
-  bottom: -22px;
-  height: 48px;
-  border-radius: 999px;
-  background: rgba(43, 24, 10, 0.12);
-  filter: blur(32px);
-  z-index: -1;
-}
-
-.beta-dashboard-frame .dashboard-wrap img {
-  border-radius: 18px 18px 0 0;
-  filter: none;
-}
-
 .beta-card-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -428,10 +327,6 @@ tailwind.config = {
   .beta-card-grid {
     grid-template-columns: 1fr;
   }
-
-  .beta-dashboard-frame {
-    margin: 16px 10px 0;
-  }
 }
 
 @media (max-width: 809.98px) {
@@ -487,14 +382,8 @@ tailwind.config = {
     <section class="beta-shell bg-bg-alt pt-[118px] lg:pt-[152px] pb-16 lg:pb-20 px-6 lg:px-16">
       <div class="mx-auto max-w-[1120px] beta-hero-layout">
         <div class="flex flex-col gap-6">
-          <span class="section-label w-fit">Windows Beta</span>
           <h1 class="hero-title beta-hero-title">Download the <span class="gradient-text">Naimab Windows beta</span></h1>
           <p class="beta-lead text-muted">A local-first desktop build for early testers. Catch burnout sooner, keep context between sessions, and help shape the product before public launch.</p>
-
-          <div class="beta-status-row">
-            <div class="beta-status-pill" id="download-status">Checking installer availability...</div>
-            <p class="beta-platform-note" id="platform-note">Built for Windows 10 and Windows 11.</p>
-          </div>
 
           <div class="hero-actions flex flex-col sm:flex-row gap-4">
             <a class="nav-pill nav-pill-primary text-base px-10 py-4 btn-shimmer beta-download-button" data-download-link href="/testx/download" download>
@@ -539,12 +428,6 @@ tailwind.config = {
                   <div class="beta-meta-value">Same test URL</div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="beta-dashboard-frame">
-            <div class="dashboard-wrap">
-              <img alt="Naimab dashboard preview showing burnout trends and AI insights" class="w-full h-auto block" src="/dashboard.png"/>
             </div>
           </div>
         </div>

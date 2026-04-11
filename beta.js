@@ -1,6 +1,4 @@
-const statusEl = document.getElementById('download-status');
 const helperEl = document.getElementById('download-helper');
-const platformNoteEl = document.getElementById('platform-note');
 const missingBannerEl = document.getElementById('download-missing-banner');
 const headerEl = document.getElementById('main-header');
 const downloadLinks = Array.from(document.querySelectorAll('[data-download-link]'));
@@ -53,16 +51,6 @@ function setDownloadDisabled(isDisabled) {
   });
 }
 
-function setStatusAppearance(state, text) {
-  if (!statusEl) return;
-
-  statusEl.classList.remove('is-ready', 'is-missing', 'is-error');
-  if (state) {
-    statusEl.classList.add(state);
-  }
-  statusEl.textContent = text;
-}
-
 function showMissingBanner() {
   if (!missingBannerEl) return;
   missingBannerEl.classList.add('is-visible');
@@ -73,35 +61,20 @@ function hideMissingBanner() {
   missingBannerEl.classList.remove('is-visible');
 }
 
-function applyPlatformCopy() {
-  if (!platformNoteEl) return;
-
-  const userAgent = navigator.userAgent || '';
-  const isWindows = /Windows/i.test(userAgent);
-
-  platformNoteEl.textContent = isWindows
-    ? 'You are on Windows. The installer will download directly once the build is live.'
-    : 'Best downloaded from a Windows 10/11 device, but the link can still be shared now.';
-}
-
 function applyReadyState({ sizeText }) {
-  const statusText = sizeText
-    ? `Installer is live · ${sizeText}`
-    : 'Installer is live and ready to download';
-
-  setStatusAppearance('is-ready', statusText);
   setDownloadLabels('Download for Windows', 'Start Download');
   setDownloadDisabled(false);
 
   if (helperEl) {
-    helperEl.textContent = 'The current Windows beta is live. Replace the installer at the same endpoint whenever you publish a fresh build.';
+    helperEl.textContent = sizeText
+      ? `The current Windows beta is live (${sizeText}). Replace the installer at the same endpoint whenever you publish a fresh build.`
+      : 'The current Windows beta is live. Replace the installer at the same endpoint whenever you publish a fresh build.';
   }
 
   hideMissingBanner();
 }
 
 function applyMissingState() {
-  setStatusAppearance('is-missing', 'Installer is not live yet');
   setDownloadLabels('Installer Coming Soon', 'Build Pending');
   setDownloadDisabled(true);
 
@@ -111,7 +84,6 @@ function applyMissingState() {
 }
 
 function applyErrorState() {
-  setStatusAppearance('is-error', 'Could not verify the installer right now');
   setDownloadLabels('Retry Download', 'Retry');
   setDownloadDisabled(false);
 
@@ -121,7 +93,6 @@ function applyErrorState() {
 }
 
 async function checkDownloadAvailability() {
-  setStatusAppearance('', 'Checking installer availability...');
   setDownloadLabels('Checking Build', 'Checking');
 
   try {
@@ -158,7 +129,6 @@ downloadLinks.forEach((link) => {
 
 window.addEventListener('scroll', updateHeaderState, { passive: true });
 updateHeaderState();
-applyPlatformCopy();
 
 const currentUrl = new URL(window.location.href);
 if (currentUrl.searchParams.get('download') === 'missing') {
