@@ -1115,20 +1115,6 @@ body.preload-intro #site-shell {
   transform: translateY(-1px);
 }
 
-/* ── Dashboard image ── */
-.dashboard-wrap {
-  border-radius: 0;
-  overflow: visible;
-}
-
-.dashboard-wrap img {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  margin: 0;
-  filter: drop-shadow(0 30px 80px rgba(43, 24, 10, 0.1));
-}
 
 /* ── Button shimmer ── */
 @keyframes btn-shimmer {
@@ -1559,4 +1545,19 @@ body.preload-intro #site-shell {
 .concl-status-check svg {
   width: 10px;
   height: 10px;
+}
+
+/* ── Dashboard image ── */
+.dashboard-wrap {
+  border-radius: 0;
+  overflow: visible;
+}
+
+.dashboard-wrap img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  filter: drop-shadow(0 30px 80px rgba(43, 24, 10, 0.1));
 }

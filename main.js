@@ -641,6 +641,7 @@ function startHeroSequence() {
   } else {
     heroSequence.forEach(({ target }) => animateRevealTarget(target));
   }
+
 }
 
 function initializeRevealSystem() {
@@ -1202,14 +1203,14 @@ function hideWaitlistSupportFallback() {
 
 function buildWaitlistSupportMailto(name, email) {
   const params = new URLSearchParams({
-    subject: 'Early access request',
+    subject: 'Access request',
     body: [
       `Name: ${name || '-'}`,
       `Email: ${email || '-'}`,
       '',
       'Hi Naimab team,',
       '',
-      'I could not join the early access waitlist from the website, so I am sending my request by email.',
+      'I could not request access from the website, so I am sending my request by email.',
     ].join('\n'),
   });
 
@@ -1345,8 +1346,8 @@ function bindModalForm() {
             '<div class="size-16 rounded-full bg-dark/10 flex items-center justify-center mx-auto mb-4">' +
               '<span class="material-symbols-outlined text-dark text-3xl">check_circle</span>' +
             '</div>' +
-            '<h3 class="text-xl font-bold mb-2">You\'re on the list!</h3>' +
-            '<p class="text-muted text-sm mb-6">Check your inbox — we just sent you a confirmation. We\'ll notify you when early access opens.</p>' +
+            '<h3 class="text-xl font-bold mb-2">You\'re in.</h3>' +
+            '<p class="text-muted text-sm mb-6">Check your inbox — we just sent you your access link.</p>' +
             '<button class="btn-primary w-full py-3" id="waitlist-success-close" type="button">' +
               'Got it' +
             '</button>' +
